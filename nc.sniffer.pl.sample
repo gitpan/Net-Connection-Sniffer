@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+#
+# nc.sniffer.pl v0.01 4-20-06
+# Copyright 2006, Michael Robinton, michael@bizsystems.com
+# See GPL notice in Net::Connection::Sniffer
+#
+use strict;
+use lib qw(blib/lib);
+use Net::Connection::Sniffer;
+use warnings;
+
+#########################################################
+#     For most unix systems, this should work as is	#
+#########################################################
+
+my $config = {
+
+# specify the directory for the pid file for this daemon.
+# The directory must exist and have writable permissions.
+# [required]
+#
+	piddir	=>  '/var/run/nc.sniffer',
+
+# specify the directory for the statistics file for this 
+# daemon. The directory must exist and have writable 
+# permissions
+# [required]
+#
+	sniffer	=>  '/var/run/nc.sniffer',
+
+# BPF filter statement. See examples below.
+# [required]
+#
+	bpf	=> 'src host myhost.com and tcp port 80',
+
+# UDP listen port to trigger a dump file
+# [optional]   
+#
+	port	=> 10004,
+
+# HOST address on which to listen                                
+# may one of a HOSTNAME, IP address, or
+# 'INADDR_ANY', 'INADDR_LOOPBACK'
+# [optional] default 127.0.0.1 == INADDR_LOOPBACK
+#
+	host	=> 'INADDR_LOOPBACK',
+
+# ALLOWED connecting host(s)
+# may be HOSTNAME or IP address
+# [optional] default 127.0.0.1
+#
+	allowed	=> ['127.0.0.1',],
+};
+
+no warnings;
+
+gather($config);

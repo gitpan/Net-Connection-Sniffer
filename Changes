@@ -1,0 +1,38 @@
+Revision history for Perl extension Net::Connection::Sniffer
+
+0.09  Thu Jun  1 10:38:33 PDT 2006
+	first release to CPAN
+
+	clean up documentation
+
+0.08  Wed May 31 17:45:13 PDT 2006
+	optimizations to reduce cpu cycles
+
+0.07  Tue May 30 19:06:03 PDT 2006
+	remove unused vars in Perl and C that are
+	pushed back and forth between xs <-> perl
+
+	change "B" accumulator from UV to NV
+
+	separate double / u_int32_t arithmetic into
+	individual pieces -- compiler appears to mis-align
+	variable addresses with with no warnings
+
+0.06  Mon May 29 13:16:44 PDT 2006
+	release of port to 'C'
+
+0.05  this and previous versions not released
+
+0.04  Fri May 19 18:08:00 PDT 2006
+	replace missing do_while in daemon v03
+
+0.03  Wed May 17 18:58:07 PDT 2006
+	further refinement ahead of conversion
+
+	deployed to test with bug
+
+0.02  Tue May 16 14:48:58 PDT 2006
+	rearrange stuff ahead of conversion of core to 'C'
+
+0.01  Sat May 13 19:30:43 PDT 2006
+	initial release
