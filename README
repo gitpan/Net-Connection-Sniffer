@@ -9,9 +9,9 @@ SYNOPSIS
 DESCRIPTION
     Net::Connection::Sniffer is a perl module to gather connection
     statistics by listening to ethernet traffic. Traffic is filtered using
-    standard BPF notation as described in the the tcpdump manpage
-    documentation and implemented using the standard "pcap" library to sniff
-    packets on host network interfaces.
+    standard BPF notation as described in the "tcpdump" documentation and
+    implemented using the standard "pcap" library to sniff packets on host
+    network interfaces.
 
 CONFIGURATION
     Create a directory with appropriate permissions for the pid file and the
@@ -63,7 +63,7 @@ CONFIGURATION
 
     To generate a web report to STDOUT with or without a cache file, edit
     the nc.sniffer.cgi.sample file to change or set the configuration
-    parameters. See the Net::Connection::Sniffer::Report::web_report manpage
+    parameters. See the Net::Connection::Sniffer::Report manpageweb_report
     or the sample file for details.
 
       Usage: <!--#exec cmd="./nc.sniffer.cgi 0" -->
@@ -250,6 +250,29 @@ EXPORTS
           input:        config hash
           returns:      nothing (exits)
 
+PREREQUISITES
+    The "pcap" library ("libpcap") which is part of "tcpdump" and is
+    included in most *nix distributions. Available from:
+
+      http://sourceforge.net/projects/libpcap/
+
+    the NetAddr::IP::Util manpage which is part of distribution the
+    NetAddr::IP::Lite manpage
+
+    the Net::Interface manpage
+
+    the Net::DNS::Codes manpage
+
+    the Net::DNS::ToolKit manpage
+
+    the Net::NBsocket manpage
+
+    the Proc::PidUtil manpage
+
+    the Sys::Hostname::FQDN manpage
+
+    the Sys::Sig manpage
+
 COPYRIGHT
     Copyright 2004 - 2006, Michael Robinton <michael@bizsystems.com>
 
@@ -274,5 +297,6 @@ AUTHOR
 SEE ALSO
             man (1) tcpdump
             man (3) pcap
-            L<Net::Connection::Sniffer::Report>
+
+    the Net::Connection::Sniffer::Report manpage
 

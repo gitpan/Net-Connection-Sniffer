@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.10 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.11 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -1048,8 +1048,19 @@ sub do_listen {
 
 =head1 PREREQUISITES
 
+The C<pcap> library (C<libpcap>) which is part of C<tcpdump> and is
+included in most *nix distributions. Available from:
+
+  http://sourceforge.net/projects/libpcap/
+
 L<NetAddr::IP::Util> which is part of distribution
 L<NetAddr::IP::Lite>
+
+L<Net::Interface>
+
+L<Net::DNS::Codes>
+
+L<Net::DNS::ToolKit>
 
 L<Net::NBsocket>
 

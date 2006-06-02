@@ -12,6 +12,7 @@ my %makeparms = (
     'NAME'		=> $pkg,
     'VERSION_FROM'	=> $module, # finds $VERSION
     'PREREQ_PM'		=> {
+				Net::Interface		=> 0.08,
 				Net::NBsocket		=> 0.12,
 				Sys::Hostname::FQDN	=> 0.07,
 				Proc::PidUtil		=> 0.07,
