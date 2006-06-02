@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.12  Fri Jun  2 13:02:48 PDT 2006
+	Oops! missed another makefile prequisite entry
+
 0.11  Fri Jun  2 12:46:38 PDT 2006
 	Left prequisite Net::Interface
 	out of Makefile.PL
