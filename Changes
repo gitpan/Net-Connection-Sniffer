@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.10  Fri Jun  2 11:18:38 PDT 2006
+	Documentation update
+
 0.09  Thu Jun  1 10:38:33 PDT 2006
 	first release to CPAN
 

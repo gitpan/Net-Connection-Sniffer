@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.09 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.10 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -260,7 +260,7 @@ Net::Connection::Sniffer -- gather stats on network connections
 
 B<Net::Connection::Sniffer> is a perl module to gather connection
 statistics by listening to ethernet traffic. Traffic is filtered using
-standard BPF notation as described in the L<tcpdump> documentation and
+standard BPF notation as described in the C<tcpdump> documentation and
 implemented using the standard C<pcap> library to
 sniff packets on host network interfaces.
 
@@ -316,7 +316,7 @@ Edit the B<nc.sniffer.pl.sample> file to change or set the following:
 To generate a web report to STDOUT with or without a cache file, 
 edit the B<nc.sniffer.cgi.sample> file to change
 or set the configuration parameters. See
-L<Net::Connection::Sniffer::Report::web_report> or the sample file for
+L<Net::Connection::Sniffer::Report>B<web_report> or the sample file for
 details.
 
   Usage: <!--#exec cmd="./nc.sniffer.cgi 0" -->
@@ -1046,6 +1046,19 @@ sub do_listen {
   }
 }
 
+=head1 PREREQUISITES
+
+L<NetAddr::IP::Util> which is part of distribution
+L<NetAddr::IP::Lite>
+
+L<Net::NBsocket>
+
+L<Proc::PidUtil>
+
+L<Sys::Hostname::FQDN>
+
+L<Sys::Sig>
+
 =head1 COPYRIGHT
 
 Copyright 2004 - 2006, Michael Robinton <michael@bizsystems.com>
@@ -1073,7 +1086,8 @@ Michael Robinton <michael@bizsystems.com>
 
 	man (1) tcpdump
 	man (3) pcap
-	L<Net::Connection::Sniffer::Report>
+
+L<Net::Connection::Sniffer::Report>
 
 =cut
 
