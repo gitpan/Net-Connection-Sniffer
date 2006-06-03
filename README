@@ -63,7 +63,7 @@ CONFIGURATION
 
     To generate a web report to STDOUT with or without a cache file, edit
     the nc.sniffer.cgi.sample file to change or set the configuration
-    parameters. See the Net::Connection::Sniffer::Report manpageweb_report
+    parameters. See the Net::Connection::Sniffer::Report manpage::web_report
     or the sample file for details.
 
       Usage: <!--#exec cmd="./nc.sniffer.cgi 0" -->

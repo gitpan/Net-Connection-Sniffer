@@ -35,12 +35,14 @@ use Sys::Hostname::FQDN qw(
 
 use NetAddr::IP::Util qw(
 	inet_any2n
+	sub128
+	hasbits
 );
 use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.02 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.03 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -172,15 +174,15 @@ sub by_cidr24 {
   my $s = shift;
   my $bandwidth = 0;
   my $rate = 0;
-  my $ln;
+  my($ln,$r,$w,$e,$nip);
   my($ce,$cr,$cw,$cn,$key);
   my $num = 0;
   my $composite = {};
   foreach $_ (sort keys %$s) {
-    my $nip = newcidr24 Net::Connection::Sniffer::Util(inet_any2n($_));
-    my $r = $s->{$_}->{R};
-    my $w = $s->{$_}->{W};
-    my $e = $s->{$_}->{E};
+    $nip = newcidr24 Net::Connection::Sniffer::Util(inet_any2n($_));
+    $r = $s->{$_}->{R};
+    $w = $s->{$_}->{W};
+    $e = $s->{$_}->{E};
     unless ($ln) {		# first time through
       $cr = $r;
       $cw = $w;
@@ -202,14 +204,25 @@ sub by_cidr24 {
 	inet_aton($a) cmp inet_aton($b)
       } @$key;
       $composite->{$num}->{A} = [@_];
-      $num++;
       $rate += $cr;
       $bandwidth += $cw;
+      $num++;
       $cr = $r;
       $cw = $w;
       $ce = $e;
       $key = [$_];
     }
+  }
+  if ($nip->equal($ln)) {
+    $composite->{$num}->{R} = $cr;
+    $composite->{$num}->{W} = $cw;
+    $composite->{$num}->{E} = $ce;
+    @_ = sort {		# put ip's in numeric order
+      inet_aton($a) cmp inet_aton($b)
+    } @$key;
+    $composite->{$num}->{A} = [@_];
+    $rate += $cr;
+    $bandwidth += $cw;
   }
   return ($composite,$rate,$bandwidth);
 }

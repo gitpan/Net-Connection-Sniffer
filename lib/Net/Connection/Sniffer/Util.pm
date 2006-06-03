@@ -5,12 +5,13 @@ use strict;
 
 use NetAddr::IP::Util qw(
 	sub128
+	hasbits
 	ipanyto6
 	ipv6_aton
 );
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.01 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.02 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 =head1 NAME
 
@@ -29,6 +30,9 @@ Net::Connection::Sniffer::Util -- netaddr utilities
 
   if ($ip->contains($someip)) {
 	do something...
+
+  if ($ip1->equal($ip2)) {
+	do something
 
 =head1 DESCRIPTION
 
@@ -57,7 +61,6 @@ sub newcidr24 {
   bless ($self, $class);
   return $self;
 }
-
 
 =item * my $ipcopy = $ip->copy;
 
@@ -108,6 +111,22 @@ This is the logical compliment of the B<within> method.
 sub contains {
   my($sref,$ip) = @_;
   return within($ip,$sref);
+}
+
+=item * $rv = $ip1->equal($ip2);
+
+Check if IP1 equal IP2
+
+  input:	ip2 object
+  returns:	true/false
+
+=cut
+
+sub equal {
+  my($ip1,$ip2) = @_;
+  return 0 unless $ip1 && $ip2 && ref $ip1 && ref $ip2;
+  return hasbits((sub128($ip1->{IP},$ip2->{IP}))[1])
+	? 0 : 1;
 }
 
 =pod

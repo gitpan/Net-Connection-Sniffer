@@ -1,5 +1,12 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.13  Sat Jun  3 12:48:26 PDT 2006
+	add 'sub equal' to Util.pm v0.02
+
+	update Report v0.03 'by_cidr' so that it
+	does not truncate a single or last entry
+	from the stats hash
+
 0.12  Fri Jun  2 13:02:48 PDT 2006
 	Oops! missed another makefile prequisite entry
 

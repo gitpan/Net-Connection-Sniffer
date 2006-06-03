@@ -19,6 +19,7 @@ t/chkcache.t
 t/constants.t
 t/dns_expire.t
 t/dyn_bind.t
+t/equal.t
 t/get_lock.t
 t/init.t
 t/loadreport.t

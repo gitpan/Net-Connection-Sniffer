@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.12 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.13 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -316,7 +316,7 @@ Edit the B<nc.sniffer.pl.sample> file to change or set the following:
 To generate a web report to STDOUT with or without a cache file, 
 edit the B<nc.sniffer.cgi.sample> file to change
 or set the configuration parameters. See
-L<Net::Connection::Sniffer::Report>B<web_report> or the sample file for
+L<Net::Connection::Sniffer::Report>::B<web_report> or the sample file for
 details.
 
   Usage: <!--#exec cmd="./nc.sniffer.cgi 0" -->
