@@ -42,7 +42,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.03 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.04 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -129,7 +129,7 @@ sub read_stf {
   my $file = shift;
   eval {
     die "no status file '$file'"
-	unless $file && -e $file && -r $file &&
+	unless $file && -e $file && -r $file && -s $file &&
 	open (F,$file);
   };
   if ($@) {
@@ -315,7 +315,6 @@ Two types of reports are created:
 
 sub report {
   my($handle,$file,$type) = @_;
-
   my($stats,$head) = read_stf($file);
   return $@ if $@;
   my($composite,$rate,$bandwidth) = by_cidr24($stats);

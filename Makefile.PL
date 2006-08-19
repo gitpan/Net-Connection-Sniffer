@@ -18,7 +18,7 @@ my %makeparms = (
 				Net::NBsocket		=> 0.12,
 				Sys::Hostname::FQDN	=> 0.07,
 				Proc::PidUtil		=> 0.07,
-				NetAddr::IP::Util	=> 0.07,
+				NetAddr::IP::Util	=> 0.11,
 				Sys::Sig		=> 0.02,
 			},
     'LIBS'		=> '-lpcap',

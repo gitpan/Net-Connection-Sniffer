@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.14  Sat Aug 19 14:01:08 PDT 2006
+	add test for zero length stat file in Report.pm v0.04
+
+	NetAddr::IP::Lite 0.06 / NetAddr::IP::Util 0.11
+	required for operation on Sparc
+
 0.13  Sat Jun  3 12:48:26 PDT 2006
 	add 'sub equal' to Util.pm v0.02
 
