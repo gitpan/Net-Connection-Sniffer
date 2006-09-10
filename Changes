@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.15  Wed Sep  6 12:38:54 PDT 2006
+	add payload string match capability
+
+	add perl 5.0503 compability updates
+
 0.14  Sat Aug 19 14:01:08 PDT 2006
 	add test for zero length stat file in Report.pm v0.04
 

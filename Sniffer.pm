@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.14 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.15 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -47,6 +47,7 @@ $VERSION = do { my @r = (q$Revision: 0.14 $ =~ /\d+/g); sprintf "%d."."%02d" x $
 	_ptrs
 	set_globals
 	dns_expire
+	lcstr
 );
 
 %EXPORT_TAGS = (
@@ -115,14 +116,15 @@ my $IPV4_H = 20;
 #my $TCP_H = 20;
 
 
-#my $addr_off = $ETH_H + 12;		# src address
-#my $frag_off = $ETH_H + 6;
+#my $addr_off	= $ETH_H + 12;		# src address
+#my $frag_off	= $ETH_H + 6;
 
-my $minlen = $ETH_H + $IPV4_H + 4;	# need port numbers at a minimum
-my $snaplen = $minlen;
+my $minlen	= $ETH_H + $IPV4_H + 4;	# need port numbers at a minimum
+my $snaplen 	= $minlen;
 
 my $oneday	= 86400;			# WARNING, set in XS also
 my $unique	= $$ -1;			# dns sequence number
+my($match,$nomatch,$payoff);
 
 #################################################
 ##### global vars reset by HUP
@@ -293,12 +295,37 @@ Edit the B<nc.sniffer.pl.sample> file to change or set the following:
   #
         bpf     => 'src host myhost.com and tcp port 80',
 
+  # size of the portion of packet to capture, defaults
+  # to the minimum size necessary to determine the
+  # source and destination IP addresses and port numbers
+  # [optional]		ETH_head + IPV4_head + 4
+
+  #	snaplen	=> 38,
+
+  # filter condition: payload must contain this string.
+  # case insensitive match of the payload data to this string. 
+  # [optional]
+
+  #	match	=> 'somestring',
+
+  # filter condition: payload must NOT contain this string.
+  # case insensitive match of the payload data to this string.
+  # [optional]
+
+  #	nomatch	=> 'some.other.string',
+
+  # offset of the payload from the packet start
+  # typically at least 60 for tcp, 44 for udp
+  # [optional]... but [required] for 'match', 'nomatch'
+  #
+  #	payload	=> 44,
+
   # UDP listen port to trigger a dump file
   # [optional]
   #
 	port	=> 10004,
 
-  # HOST address on which to listen
+  # HOST address on which to listen for dump request
   # may be one of a HOSTNAME, IP address, or
   # strings 'INADDR_ANY', 'INADDR_LOOPBACK'
   # [optional] default 127.0.0.1 == INADDR_LOOPBACK
@@ -403,7 +430,9 @@ return even after a... C<specified timeout> expires...
 ...In FreeBSD 4.6 and later, select() and poll() work correctly on BPF
 devices...
 
-=head1 BPF EXAMPLES
+=head1 EXAMPLES
+
+=head2 BPF examples
 
 The B<bpf> entry in the configuration hash uses the standard language
 documented in detail in the B<tcpdump> man(1) page. The B<bpf> statement
@@ -428,6 +457,98 @@ Capture response traffic leaving your DNS server:
 
   bpf	=> 'src host my.dns.com and udp port 53',
 
+=head2 Content MATCH/NOMATCH examples
+
+The B<match> and B<nomatch> configuration entries can be used to further discriminate
+which packets to sniff. When the B<match> entry is set, only packets which meet the
+BPF criteria AND have matching data within the packet capture buffer are selected for
+analysis. Conversely, when the B<nomatch> entry is set, packets which meet the BPF criteria
+and match the B<nomatch> string are unconditionally dropped. B<match> and B<nomatch> may 
+both be set.
+
+NOTE: that matches are made on a case insensitive basis.
+
+Capture request traffic arriving at the DNS port with a query for
+C<somedomain.com>. From RFC1035, we know that a datagram might
+need to use the domain names F.ISI.ARPA,
+FOO.F.ISI.ARPA, ARPA, and the root.  Ignoring the other fields of the
+message, these domain names might be represented as:
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    20 |      decimal 1        |           F           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    22 |      decimal 3        |           I           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    24 |           S           |           I           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    26 |      decimal 4        |           A           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    28 |           R           |           P           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    30 |           A           |           0           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    40 |      decmial 3        |           F           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    42 |           O           |           O           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    44 | 1  1|            decimal 20                   |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    64 | 1  1|            decimal 26                   |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    92 |      decimal 0        |                       |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+Our examples B<somedomain.com> would be represented in the datagram
+as follows:
+
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    20 |      decimal 10       |           s           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    22 |           o           |           m           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    24 |           e           |           d           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    26 |           o           |           m           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    28 |           a           |           i           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+    30 |           n           |      decimal 3        |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+             
+    30 |           c           |           o           |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+             
+    30 |           m           |      decimal 0        |
+       +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+             
+
+This translates to the perl string:
+
+	where 10 becomes hex \x{a}
+
+  $string = "\x{a}somedomain\x{3}com"
+
+The offset of the query QUESTION is:
+
+  ETH header	16
+  IP header	20
+  UDP header	8
+  Query head	12
+		--
+		54
+
+and the snaplen needs to be long enough to alway capture the domain name.
+There, our example configuration becomes:
+
+  bpf	  => 'dst host my.dns.com and udp port 53',
+  match	  => "\x{a}somedomain\x{3}com",
+  snaplen => 90,
+	# eth head + ip head + udp head + query head
+  payload => 54,
+
 =head1 DUMP FILE FORMAT
 
 The dump file is written in a format compatible with that produced by
@@ -441,6 +562,10 @@ using B<File::SafeDO>.
   # users:	  1234 users now
   # device:       eth1:1  non-promiscuous
   # bpf:          dst host my.host.com
+  # [optional if match/nomatch present]
+  # fragment:	nn -- mm
+  # contains:	match.string
+  # excludes:	nomatch.string
   {
     my $dump = {
        '69.3.95.131'     => {
@@ -692,6 +817,19 @@ sub check_config {
 	unless -w $sniffer;
     }
   }
+# snaplen
+  $snaplen = $c->{snaplen}
+	if $c->{snaplen};
+  $snaplen = 65535 if $snaplen > 65535;
+# payload, match/nomatch
+  $match = $c->{match} ? lc $c->{match} : undef;
+  $nomatch = $c->{nomatch} ? lc $c->{nomatch} : undef;
+  $payoff = $c->{payload};
+  if ($match || $nomatch) {
+    bad_config("invalid payload length")
+	unless $payoff && $payoff < $snaplen;
+  }
+
 # UDP dump port
   if ($port = $c->{port}) {
     bad_config("invalid port number '$c->{port}'")
@@ -790,7 +928,7 @@ sub get_if($) {
 # |                       Ethernet Checksum                       |
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-#			      IP HEADER
+#			      IPV4 HEADER
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 # |Version|  IHL  |Type of Service|          Total Length         |
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -803,7 +941,7 @@ sub get_if($) {
 # |                    Destination Address                        |
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-#			     IPV4 HEADER
+#			     TCP HEADER
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 #    0                   1                   2                   3   
 #    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
@@ -872,6 +1010,22 @@ sub timer {
   return (&WAS_PURGE);
 }
 
+# unescape 'escape' characters
+# in the form \x{hex}
+#
+sub sunescape {
+  my @string = split('',$_[0]);
+  foreach(0..$#string) {
+    my $o = ord $string[$_];
+    if ($o < 0x20 ||
+        $o > 0xfe ||
+        ($o > 0x7e && $o < 0xa8)) {
+      $string[$_] = sprintf("\\x{%x}",$o);
+    }
+  }
+  join('',@string);
+}
+
 sub dump_stats {
   my($hup,$init) = @_;
   if ($init) {
@@ -891,8 +1045,17 @@ sub dump_stats {
 	sprintf("\n# bytes:\t%.0f per second",$bw /3600).
 		"\n# users:\t". (scalar keys %$stats).
 		"\n# device:\t$dev\t". (($promisc) ? 'promiscuous':'non-promiscuous') .
-		"\n# bpf:\t\t$filter_str".
-		"\n{\n  my \$dump = {\n";
+		"\n# bpf:\t\t$filter_str";
+    if ($match || $nomatch) {
+      $init .= 	"\n# fragment:\t$payoff - $snaplen";
+      if ($match) {
+	$init .="\n# contains:\t". sunescape($match);
+      }
+      if ($nomatch) {
+	$init .="\n# excludes:\t". sunescape($nomatch);
+      }
+    }
+    $init .= 	"\n{\n  my \$dump = {\n";
     return(&PRINT_dumptxt,$init);
   }
   unless (@dlo) {
@@ -1022,6 +1185,7 @@ sub daemon {
   die "could not get local dns host\n"
 	unless $dnshost = get_ns();
   xs_daemon_init($sniffer,$stats,$dnslookup,$nhost,$dnshost,$port,$iaddr,$filter_str,$dev,$snaplen,$promisc,0);
+  match_init($match,$nomatch,$payoff,$snaplen);
   if ($sniffer ne 'STDERR') {
     open STDERR, '>/dev/null' or die "Can't dup STDERR to /dev/null: $!";
   }
@@ -1053,8 +1217,7 @@ included in most *nix distributions. Available from:
 
   http://sourceforge.net/projects/libpcap/
 
-L<NetAddr::IP::Util> which is part of distribution
-L<NetAddr::IP::Lite>
+L<NetAddr::IP::Util> which is part of distribution L<NetAddr::IP>
 
 L<Net::Interface>
 

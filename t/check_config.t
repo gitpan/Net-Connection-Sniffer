@@ -5,7 +5,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..12\n"; }
+BEGIN { $| = 1; print "1..16\n"; }
 END {print "not ok 1\n" unless $loaded;}
 
 #use diagnostics;
@@ -108,7 +108,7 @@ print "got: ${_}exp: $exp\nnot "
 	unless ($_ = chkit($conf)) eq $exp;
 &ok;
 
-mkdir $path;
+mkdir $path,0755;
 open SF,'>'. $path .'/'. $medam .'.stats';
 close SF;
 
@@ -148,8 +148,39 @@ print "got: ${_}exp: $exp\nnot "
 	unless ($_ = chkit($conf)) eq $exp;
 &ok;
 
+## test 12	all allowed
 $conf->{allowed} = [qw(192.168.0.1 172.16.0.1)];
 $exp = '';
 print "allowed unexpected: $_\nnot "
+	if ($_ = chkit($conf));
+&ok;
+
+## test 13	match, no payload
+$conf->{match} = 'some string';
+$exp = "config: invalid payload length\n";
+print "got: ${_}exp: $exp\nnot "
+	 unless ($_ = chkit($conf)) eq $exp;
+&ok;
+
+delete $conf->{match};
+
+## test 14	nomatch, no payload
+$conf->{nomatch} = 'some string';
+$exp = "config: invalid payload length\n";
+print "got: ${_}exp: $exp\nnot "
+	 unless ($_ = chkit($conf)) eq $exp;
+&ok;
+
+## test 15	bad payload length
+$conf->{payload} = 38;
+$exp = "config: invalid payload length\n";
+print "got: ${_}exp: $exp\nnot "
+	 unless ($_ = chkit($conf)) eq $exp;
+&ok;
+
+## test 16	pass
+$conf->{payload} = 37;
+$exp = '';
+print "unexpected: $_\nnot "
 	if ($_ = chkit($conf));
 &ok;

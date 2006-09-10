@@ -74,7 +74,7 @@ print $@,"\nnot "
 	if $@;
 &ok;
 
-mkdir $path;
+mkdir $path,0755;
 
 ## test 5	timeout on no file
 print "got: $_, exp: undefined\nnot "

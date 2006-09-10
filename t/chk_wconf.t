@@ -69,7 +69,7 @@ print "got: $_\nexp: $exp\nnot "
 	unless ($_ = chk_wconf($conf)) eq $exp;
 &ok;
 
-mkdir $path;
+mkdir $path,0755;
 
 ## test 4	# check cache directory
 $conf->{cache} = './tmpc/cachefile';
@@ -78,7 +78,7 @@ print "got: $_\nexp: $exp\nnot "
 	unless ($_ = chk_wconf($conf)) eq $exp;
 &ok;
 
-mkdir './tmpc';
+mkdir './tmpc',0755;
 
 ## test 5	# invalid update timeout
 $conf->{updto} = '1234x';

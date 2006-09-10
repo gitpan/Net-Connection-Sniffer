@@ -15,7 +15,7 @@ use Net::Connection::Sniffer::Report qw(
 
 my $future;
 {
-  no warnings;
+  local $^W = 0;
   *Net::Connection::Sniffer::Report::_ctime = sub {return $future};
 }
 
@@ -50,7 +50,7 @@ sub ok {
 }
 
 my $path = './tmp';
-mkdir $path;
+mkdir $path,0755;
 
 sub next_sec {
   my ($then) = @_;

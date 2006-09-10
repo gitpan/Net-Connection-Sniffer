@@ -43,7 +43,7 @@ sub ok {
 }
 
 my $path = './tmp';
-mkdir $path;
+mkdir $path,0755;
 
 sub next_sec {
   my ($then) = @_;

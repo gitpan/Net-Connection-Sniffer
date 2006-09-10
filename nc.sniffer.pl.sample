@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 #
-# nc.sniffer.pl v0.01 4-20-06
+# nc.sniffer.pl v0.03 9-8-06
 # Copyright 2006, Michael Robinton, michael@bizsystems.com
 # See GPL notice in Net::Connection::Sniffer
 #
 use strict;
 use lib qw(blib/lib);
 use Net::Connection::Sniffer;
-use warnings;
+
 
 #########################################################
 #     For most unix systems, this should work as is	#
@@ -22,7 +22,7 @@ my $config = {
 	piddir	=>  '/var/run/nc.sniffer',
 
 # specify the directory for the statistics file for this 
-# daemon. The directory must exist and have writable 
+# daemon. The directory must exist and have writable
 # permissions
 # [required]
 #
@@ -33,14 +33,39 @@ my $config = {
 #
 	bpf	=> 'src host myhost.com and tcp port 80',
 
+# size of the portion of packet to capture, defaults
+# to the minimum size necessary to determine the
+# source and destination IP addresses and port numbers
+# [optional]		ETH_head + IPV4_head + 4
+
+#	snaplen	=> 38,
+
+# filter condition: payload must contain this string.
+# case insensitive match of the payload data to this string. 
+# [optional]
+
+#	match	=> 'somestring',
+
+# filter condition: payload must NOT contain this string.
+# case insensitive match of the payload data to this string.
+# [optional]
+
+#	nomatch	=> 'some.other.string',
+
+# offset of the payload from the packet start
+# typically at least 60 for tcp, 44 for udp
+# [optional]... but [required] for 'match', 'nomatch'
+#
+#	payload	=> 44,
+
 # UDP listen port to trigger a dump file
-# [optional]   
+# [optional]
 #
 	port	=> 10004,
 
-# HOST address on which to listen                                
-# may one of a HOSTNAME, IP address, or
-# 'INADDR_ANY', 'INADDR_LOOPBACK'
+# HOST address on which to listen for dump request
+# may be one of a HOSTNAME, IP address, or
+# strings 'INADDR_ANY', 'INADDR_LOOPBACK'
 # [optional] default 127.0.0.1 == INADDR_LOOPBACK
 #
 	host	=> 'INADDR_LOOPBACK',
@@ -50,8 +75,7 @@ my $config = {
 # [optional] default 127.0.0.1
 #
 	allowed	=> ['127.0.0.1',],
+
 };
-
-no warnings;
-
+local $^W = 0;
 gather($config);

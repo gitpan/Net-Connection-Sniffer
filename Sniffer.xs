@@ -10,8 +10,29 @@
 #include <netinet/ether.h>
 #include <netinet/ip.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <pcap.h>
+
+#ifndef NV
+#define NV double
+#endif
+
+#ifndef newSVuv
+SV*
+newSVuv(U32 in)
+{ 
+  SV* out = newSViv(in);
+  sv_setuv(out,in);
+  return out;
+}
+#endif
+
+#ifndef IP_HLEN
+#define IP_HLEN 0x14
+#endif
+
+#define minlen	ETH_HLEN + IP_HLEN + 4		/* need src/dst ports in packet for filtering	*/
 
 const int nxtrateupd = 60, nxtupd = 300, oneday = 86400, onehour = 3600;
 
@@ -20,6 +41,7 @@ AV	* dnsrequest;
 HV	* stats;
 double	rate, bw, ba;
 u_int32_t	ra, now, next, start, nextp;
+int * udp_tcp_hdr;
 
 union buffer
 {
@@ -44,10 +66,13 @@ union naddr     me, trgt;
 int	dumptofile, signal_dump = 0, nleft, dnsRflag = 0, socklen = sizeof(struct sockaddr);
 int	maxfd, max, run, hup, nfound, dump_head, nextrate;
 int	dnsFD, lFD, wFD, pFD, dnsFDm = 0, lFDm = 0, wFDm = 0, pFDm = 0;
+int	payoff = 0, pktlen = minlen;
+size_t	paysize;
 
 FILE	* WFD;
 
 char	filepath[512], tmp[512], pbuf[512], * bptr;
+u_char	haystack[65536];	/*	payload buffer	*/
 
 union sock
 {
@@ -66,6 +91,30 @@ struct timeval tloop;
 
 struct sigaction sa;
 sigset_t set;
+
+unsigned char * match = NULL, * nomatch = NULL;
+
+void
+debug_packet(unsigned char * str, int len)
+{
+  int i, c, d = 0, hex = 1;	/*	set hex = 1, alpha = 0	*/
+  for (i=0;i<len;i++) {
+    c = (int)*(str +i);
+    if (hex != 0)
+      fprintf(stderr,"%02X",c);
+    else {
+      if (isgraph(c) == 0)
+        c = (int)('.');
+      fprintf(stderr,"%c",(u_char)c);
+    }
+    d++;
+    if (d >= 8) {	/*	set character segmentation here	*/
+      d = 0;
+      fprintf(stderr," ");
+    }
+  }
+  fprintf(stderr,"\n");
+}
 
 int
 dumpmore()
@@ -165,12 +214,6 @@ set_signals (void)
 }
 
 
-#ifndef IP_HLEN
-#define IP_HLEN 0x14
-#endif
-
-#define minlen	ETH_HLEN + IP_HLEN + 4		/* need src/dst ports in packet for filtering	*/
-
 u_int32_t
 fetch_uv(HV * hp, u_char * key)
 {
@@ -179,7 +222,7 @@ fetch_uv(HV * hp, u_char * key)
 	to preserve space we convert to UV's
  */
   vpp = hv_fetch(hp,key,1,0);
-  if (SvIOK_UV(*vpp))
+  if (SvIOK(*vpp))
     return SvUVX(*vpp);
   val = SvUV(*vpp);
   sv_setuv(*vpp,val);
@@ -223,7 +266,7 @@ aEQaPLUSbXm(HV * hp, u_char * key1, u_char * key2, double multiply)
   vpp = hv_fetch(hp,key2,1,0);
   if (key2[0] == 'B')
     tmpb = (double)SvNVX(*vpp);
-  else if (SvIOK_UV(*vpp))
+  else if (SvIOK(*vpp))
     tmpb = SvUVX(*vpp);
   else
     tmpb = SvUV(*vpp);
@@ -250,20 +293,42 @@ sniffit(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes)
   SV	** vpp;
   HV	* dusr;
   AV	* hn;			/* hostnames	*/
-  double	multiplier, tmp;
+  double	multiplier, tmpd;
   u_int32_t	e, s;
   int32_t	len	= h->len;
-
+  u_char * pcaptr, * hay, * hayend;
 
   union naddr	ip_src, ip_dst;
   struct ether_header  * eth	= (struct ether_header *)bytes;
   struct iphdr * iph		= (struct iphdr *)(bytes + ETH_HLEN);
-  struct tcphdr * tcph		= (struct tcphdr *)(bytes + ETH_HLEN + IP_HLEN);
+  udp_tcp_hdr			= (int *)(bytes + ETH_HLEN + IP_HLEN);
 
   if (	(iph->ihl*4 != IP_HLEN) ||		/* drop non-standard packets	*/
 	(iph->frag_off & htons(IP_OFFMASK)) ||	/* drop fragments		*/
-	(len < minlen)	)
+	(len < pktlen)	)			/* minimum packet len = minlen || snaplen	*/
     return;
+
+  if (match != NULL || nomatch != NULL) {
+    pcaptr = (u_char *)(bytes + payoff);
+    hay = haystack;
+    hayend = hay + paysize;
+    while (hay < hayend) {
+      *hay = (u_char) tolower((int) *pcaptr);
+      hay++;
+      pcaptr++;
+    }
+    *hayend = '\0';	/*	make sure there is a terminating null at end of char string	*/
+
+/*	drop if match needed and not found	*/
+
+    if (match != NULL && strstr(haystack,match) == NULL) {
+      return;
+    }
+/*	drop if no match needed and found	*/
+    if (nomatch != NULL && strstr(haystack,match) != NULL) {
+      return;
+    }
+  }
 
   ip_src.host	= iph->saddr;
   ip_dst.host	= iph->daddr;
@@ -280,18 +345,18 @@ sniffit(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes)
   } else {
 /* force compilier to boost to doubles for now, onehour	*/
     multiplier = onehour;
-    tmp = now;
+    tmpd = now;
     if (rate < 1) {
-/*	tmp = now - start		*/
-      tmp -= start;
-      if (tmp < 1)
-	tmp = 1;
+/*	tmpd = now - start		*/
+      tmpd -= start;
+      if (tmpd < 1)
+	tmpd = 1;
     } else {
-/*	tmp = onehour + now + nextrate - next	---	where next was (now + nextrate) so it really is (now - old)	*/
-      tmp = multiplier + tmp + nextrate - next;		/* first interval was 5 minutes	*/
+/*	tmpd = onehour + now + nextrate - next	---	where next was (now + nextrate) so it really is (now - old)	*/
+      tmpd = multiplier + tmpd + nextrate - next;		/* first interval was 5 minutes	*/
     }
-/*	multiplier = onehour / tmp	*/
-    multiplier /= tmp;
+/*	multiplier = onehour / tmpd	*/
+    multiplier /= tmpd;
     rate	= (rate + ra) * multiplier;
     bw		= (bw + ba) * multiplier;
     ba		= len;
@@ -312,15 +377,15 @@ sniffit(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes)
     } else {
 /* force compilier to boost to doubles for now, onehour	*/
       multiplier = onehour;
-      tmp = now;
+      tmpd = now;
       if ((s = fetch_uv(dusr,"S")) == e) {
-/*	tmp = now - start		*/
-	tmp -= s;
+/*	tmpd = now - start		*/
+	tmpd -= s;
       } else {
-/*	tmp = onehour + now - old	*/
-	tmp = multiplier + now - e;
+/*	tmpd = onehour + now - old	*/
+	tmpd = multiplier + now - e;
       }
-      multiplier /= tmp;
+      multiplier /= tmpd;
       aEQaPLUSbXm(dusr,"R","C",multiplier);
       aEQaPLUSbXm(dusr,"W","B",multiplier);
       set_uv(dusr,"E",now);
@@ -416,6 +481,7 @@ xs_daemon_init(sniffer,hpref,dnsref,nhost,dnshost,port,listenon,bpfstr,dev,snapl
 	char	errorbuf[PCAP_ERRBUF_SIZE+1];
 	struct bpf_program * real_fp = safemalloc(sizeof(struct bpf_program));
     CODE:
+	pktlen = snaplen;
 	if (SvPOK(sniffer) == 0)
 	  croak("sniffer is not a 'path' or 'STDERR'");
 
@@ -874,3 +940,32 @@ init_hv(hpp,len)
   CODE:
 	init_hv(hp,len);
 
+void
+match_init(mtch,nomtch,paystart,paystop)
+	SV	* mtch
+	SV	* nomtch
+	int	paystart
+	int	paystop
+  PREINIT:
+	STRLEN	len;
+  CODE:
+	if (SvPOK(mtch) == 0) {
+	  match = NULL;
+	} else {
+	  match = SvPV(mtch,len);
+	  if (len == 0)
+	    match = NULL;
+	}
+	if (SvPOK(nomtch) == 0) {
+	  nomatch = NULL;
+	} else {
+	  nomatch = SvPV(nomtch,len);
+	  if (len == 0)
+	    nomatch = NULL;
+	}
+	if (match != NULL || nomatch != NULL) {
+	  payoff = paystart;
+	  paysize = paystop - paystart;
+	  if (paysize < 1)
+	    croak("payload length specifier to short");
+	}

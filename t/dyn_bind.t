@@ -30,25 +30,6 @@ sub ok {
   ++$test;
 }
 
-if (0) {
-umask 027;
-foreach my $dir (qw(tmp)) {
-  if (-d $dir) {         # clean up previous test runs
-    opendir(T,$dir);
-    @_ = grep($_ ne '.' && $_ ne '..', readdir(T));
-    closedir T;
-    foreach(@_) {
-      unlink "$dir/$_";
-    }
-    rmdir $dir or die "COULD NOT REMOVE $dir DIRECTORY\n";
-  }
-  unlink $dir if -e $dir;       # remove files of this name as well
-}
-
-my $dir = './tmp';
-mkdir $dir;
-} # if 0
-
 ################################################################
 ################################################################
 

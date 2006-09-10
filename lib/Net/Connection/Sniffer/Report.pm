@@ -42,7 +42,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.04 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.05 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -754,7 +754,6 @@ my @months = qw(jan feb mar apr may jun jul aug sep oct nov dec);
 sub my_time {
   my($time) = shift;
   my ($sec,$min,$hour,$mday,$mon) = localtime($time);
-  my $month = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec)[$mon];
   return sprintf("%s %02d %02d:%02d:%02d",$months[$mon],$mday,$hour,$min,$sec);
 }
  
