@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.16 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.17 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -774,7 +774,15 @@ sub check_run {
     elsif ( $_ eq 'config' ) {
       print 'my $config = {';
       foreach (sort keys %{$_[0]}) {
-	print "\n\t$_\t=> '$_[0]->{$_}',";
+	if (ref $_[0]->{$_}) {
+	  print "\n\t$_\t=> [";
+	  foreach my $ar (@{$_[0]->{$_}}) {
+	    print " '$ar',";
+	  }
+	  print ' ],';
+	} else {
+	  print "\n\t$_\t=> '$_[0]->{$_}',";
+	}
       }
       print "\n};\n";
       exit 0;
