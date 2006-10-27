@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 #
-# nc.sniffer.pl v0.03 9-8-06
+# nc.sniffer.pl v0.04 9-11-06
 # Copyright 2006, Michael Robinton, michael@bizsystems.com
 # See GPL notice in Net::Connection::Sniffer
 #
 use strict;
 use lib qw(blib/lib);
 use Net::Connection::Sniffer;
-
+local $^W = 1;	# use warnings
 
 #########################################################
 #     For most unix systems, this should work as is	#
@@ -77,5 +77,5 @@ my $config = {
 	allowed	=> ['127.0.0.1',],
 
 };
-local $^W = 0;
+local $^W = 0;	# no warnings
 gather($config);

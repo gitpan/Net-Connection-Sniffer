@@ -1,5 +1,12 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.18  Fri Oct 27 11:53:34 PDT 2006
+	add local $^W = 1; # use warnings
+	to nc.sniffer
+
+	add BUGS memo about known memory leak when
+	running under Perl 5.00503
+
 0.17  Sun Sep 10 13:42:39 PDT 2006
 	fix 'config' printout of sub check_run in
 	Sniffer.pm which did not expand array ref

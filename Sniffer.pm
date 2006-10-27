@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.17 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.18 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -1003,8 +1003,9 @@ sub dns_expire {
   ($now) = @_;
   my @dnsthreads = sort keys %$dns;
   foreach(@dnsthreads) {
-    delete $dns->{$_}					# delete expired dns threads
-	if $dns->{$_}->{TO} < $now;
+    if ($dns->{$_}->{TO} < $now) {
+      delete $dns->{$_};				# delete expired dns threads
+    }
   }
   return $now + 15;
 }
@@ -1240,6 +1241,17 @@ L<Proc::PidUtil>
 L<Sys::Hostname::FQDN>
 
 L<Sys::Sig>
+
+=head1 BUGS
+
+There is memory in when run under Perl 5.0503 that has not yielded to debug
+attempts. This leak is not present in Perl 5.0601. Not tested in other
+versions. From reading through the Changes file for the transition between
+versions 5.005 and 5.6, I'm reasonably sure it is a scalar leak in Perl
+itself that was corrected with the updates to 5.6. 
+
+My recommend fix for now when running with Perl versions older than 5.6 is
+to restart the daemon daily to prevent excessive memory consumption.
 
 =head1 COPYRIGHT
 
