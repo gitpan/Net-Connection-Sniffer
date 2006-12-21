@@ -97,6 +97,31 @@ CONFIGURATION
     where an argument of "0" produces a report ordered by /24 by usage and
     an argument of "1" produces a report ordered by subdomain by usage.
 
+REMOTE CONFIGURATION, multiple hosts
+    To configure the reporting function to retrieve statistics from multiple
+    remote hosts (and localhost) do the following:
+
+            1) read the config section of
+               nc.sniffer.coalesce.cgi.sample
+            2) read the config section of
+               nc.sniffer.dump.pl.sample 
+
+    On the remote host(s), install nc.sniffer.dump.pl in an appropriate
+    sandbox account and install an ssh certificate to permit access to the
+    sandbox ssh executable as well as the directory from which to rsync the
+    stats file on that host.
+
+    nc.sniffer.dump.pl should be installed mode 755 or as appropriate to be
+    accessed remotely by the ssh -e function.
+
+    On the web host, configure nc.sniffer.coalesce.cgi and place the
+    execution cgi string in your web page to produce the report
+
+    nc.sniffer.coalesce.cgi should be SUID to the local user, not root, so
+    that the web engine can safely execute the script.
+
+      usage: <!--#exec cmd="./nc.sniffer.coalesce.cgi" -->
+
 OPERATION
     Launch the daemon with the command:
 
@@ -396,6 +421,16 @@ PREREQUISITES
     the Sys::Hostname::FQDN manpage
 
     the Sys::Sig manpage
+
+BUGS
+    There is memory in when run under Perl 5.0503 that has not yielded to
+    debug attempts. This leak is not present in Perl 5.0601. Not tested in
+    other versions. From reading through the Changes file for the transition
+    between versions 5.005 and 5.6, I'm reasonably sure it is a scalar leak
+    in Perl itself that was corrected with the updates to 5.6.
+
+    My recommend fix for now when running with Perl versions older than 5.6
+    is to restart the daemon daily to prevent excessive memory consumption.
 
 COPYRIGHT
     Copyright 2004 - 2006, Michael Robinton <michael@bizsystems.com>

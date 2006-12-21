@@ -1,5 +1,20 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.20  Thu Dec 21 15:25:51 PST 2006
+	fix problem in Report.pm v0.07 where localhost is not updated
+	with a rem_update
+
+0.19  Wed Dec 20 18:10:49 PST 2006
+	NOT released
+
+	add remote statistics collection from remote hosts
+	with coalesced statistic reporting to 
+	Report.pm v0.06
+
+	Update documentation to reflect above.
+	add nc.sniffer.coalesc.cgi.sample
+	add nc.sniffer.dump.pl.sample
+
 0.18  Fri Oct 27 11:53:34 PDT 2006
 	add local $^W = 1; # use warnings
 	to nc.sniffer

@@ -42,7 +42,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.05 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.07 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -57,10 +57,15 @@ require Exporter;
 	chkcache
 	get_lock
 	chk_wconf
+	rem_wchk
 	rqst_dump
 	web_report
 	my_time
 	dyn_bind
+	xhandle
+	rem_dump
+	rem_update
+	rem_report
 );
 
 =head1 NAME
@@ -79,10 +84,15 @@ Net::Connection::Sniffer::Report -- network profiling reports
 	chkcache
 	get_lock
 	chk_wconf
+	rem_wchk
 	rqst_dump
 	web_report
 	my_time
 	dyn_bind
+	xhandle
+	rem_dump
+	rem_update
+	rem_report
   };
 
 =head1 DESCRIPTION
@@ -99,10 +109,15 @@ by B<Net::Connection::Sniffer>.
    $rv = chkcache($filepathname,$age);
   ($lock,$file) = get_lock($filepathname,$timeout,$umask);
    $rv = chk_wconf($conf);
+   $rv = rem_wchk($conf);
    $rv = rqst_dump($sin,$file,$age,$updto);
    web_report($wconf);
    $timestring = my_time($epoch_seconds);
    $port = dyn_bind($sock,$iaddr);
+   $handle = xhandle($program_string);
+   $rv = rem_dump($conf);
+   $rv = rem_update($config);
+   rem_report($wconf);
 
 =over 4
 
@@ -561,6 +576,27 @@ sub chk_wconf {
   return '';
 }
 
+=item * $rv = rem_wchk($conf);
+
+Check the remote fetch configuration file.
+
+Note: ignores missing 'update' entry if localhost is not
+specified for update.
+
+  input:	hash reference
+  returns:	false on success or error text
+
+=cut
+
+sub rem_wchk {
+  my ($c) = @_;
+  return 'missing cache file entry'
+	unless $c->{cache};
+  $c->{stats} = $c->{cache}		# fudge stats entry for conf check if no localhost entry
+	unless exists $c->{update} && $c->{update};
+  goto &chk_wconf;
+}
+
 =item * $rv = rqst_dump($sin,$file,$age,$updto);
 
 Request a stats dump from the daemon
@@ -673,6 +709,7 @@ where $wconf = {
 
 =cut
 
+
 sub web_report {
   my $wconf = shift;
   my $type = $ARGV[0] ? 1 : 0;
@@ -778,6 +815,221 @@ sub dyn_bind {	# t => s_make_kid_Dbind.t
   return undef;
 }
 
+=item * $handle = xhandle($program_string);
+
+Open a program string for read and return handle.
+
+  input:	program string
+  returns:	handle or undef on failure to open
+
+=cut
+
+sub xhandle {
+  local *xHandle;
+  if (open(xHandle,$_[0] .'|')) {
+    return *xHandle;
+  } else {
+    return undef;
+  }
+}
+
+=item * $rv = rem_dump($conf);
+
+Dump and retrieve stats files from remote hosts and localhost if present.
+
+  input:	hash pointer to config
+  returns:	true on success
+
+=cut
+
+# subroutine to dump stats files on remote (and local) hosts
+#
+# input:	config hash
+# returns:	true on success
+#
+sub rem_dump {
+  my $wconf = shift;
+  my $ssh = $wconf->{ssh} .' ';
+  my $rsync = $wconf->{rsync} .' -utz -e '. $ssh .' ';
+  $wconf->{cache} =~ m|[^/]+$|;
+  my $dir = $` || './';
+  my %src;
+  local(*SDTERR);		# redirect error messages from rsync and ssh
+  open STDERR, '>/dev/null';
+  foreach (keys %{$wconf->{src}}) {
+    $src{$_} = xhandle($ssh . $_ .' '. $wconf->{src}->{$_}->{exec});
+  }
+  if (exists $wconf->{update}) {
+    rqst_dump($wconf->{update},$wconf->{stats},$wconf->{refresh},$wconf->{updto});
+  }
+  my $debugtxt = '';
+  foreach (keys %src) {		# wait for ssh completion
+    my $xhndl = $src{$_};
+    next unless $xhndl;
+    undef local $/;
+    $debugtxt .= <$xhndl>;
+    close $xhndl;
+  }
+  foreach (keys %src) {
+    $src{$_} = xhandle($rsync . $_ .':'. $wconf->{src}{$_}->{fetch} .' '. $dir .'/'. $_ . '.stats');
+  }
+  foreach (keys %src) {		# wait for rsync completion
+    my $xhndl = $src{$_};
+    next unless $xhndl;    
+    undef local $/;
+    $debugtxt .= <$xhndl>;    
+    close $xhndl;    
+  }
+  return 1;
+}
+
+=item * $rv = rem_update($config);
+
+Update the composite stats report
+
+  input:	hash pointer to config
+  returns:	true on success
+
+=cut
+
+sub rem_update {
+  require Data::Dumper;
+  my $c = shift;
+  my $cache = $c->{cache};
+  return undef unless $cache =~ m|/[\w\.\-]+$|;
+  $c->{cache} =~ m|[^/]+$|;
+  my $dir = $` || './';
+  $cache .= '.1';		# unconditionally type1
+  my $comp = $dir .'composite.stats';
+  my @files;
+  foreach (keys %{$c->{src}}) {
+    push @files, $dir .'/'. $_ .'.stats';
+  }
+  if (exists $c->{update}) {	# update local host if configured
+    push @files, $c->{stats};
+  }
+#               B => 5678,	    # bytes accumulated
+#               C => 1234,	    # counts
+#               E => 124444,	    # count epoch
+#               N => ['hostname',], # hostname(s) for this IP
+#               R => 2345,	    # rate
+#               S => 123456,	    # count start time
+#               T => 123455,	    # TTL timeout of PTR record
+#               W => 7890,	    # bandWidth
+
+  my $hits = 0;
+  my $bytes = 0;
+  my $users = 0;
+  my $txt = '';
+  my $stats = {};
+  foreach (@files) {
+    my($sf,$ft) = read_stf($_);
+    $hits += $1 if $ft =~ /hits:\s+(\d+)/;
+    $bytes += $1 if $ft =~ /bytes:\s+(\d+)/;
+    $users += $1 if $ft =~ /users:\s+(\d+)/;
+    $txt .= $ft;
+    foreach (keys %$sf) {
+      if (exists $stats->{$_}) {
+        $stats->{$_}->{B} += $sf->{$_}->{B};
+        $stats->{$_}->{C} += $sf->{$_}->{C};
+        $stats->{$_}->{E} = $sf->{$_}->{C}
+		if $stats->{$_}->{E} < $sf->{$_}->{C};
+        $stats->{$_}->{R} += $sf->{$_}->{R};
+        $stats->{$_}->{W} += $sf->{$_}->{W};
+      }
+      else {
+        $stats->{$_} = $sf->{$_};
+      }
+    }
+  }
+
+  local *CACHE;
+  open (CACHE,'>'. $comp .'.tmp');
+  print CACHE $txt;
+  print CACHE qq|
+# grand total all hosts
+# hits: \t$hits per minute
+# bytes:\t$bytes per second
+# users:\t$users
+|;
+  print CACHE 'my ',&Data::Dumper::Dumper($stats);
+  close CACHE;
+  rename $comp .'.tmp', $comp;
+
+  open (CACHE,'>'. $cache .'.tmp');
+  print report(*CACHE,$comp,1),"\n";
+  close CACHE;
+  rename $cache .'.tmp', $cache;
+}
+
+=item * rem_report($wconf);
+
+Similar to sub 'web_report' above but retrieves and assembles a composite report
+from multiple hosts running nc.sniffer
+
+HOWTO setup this operation.
+
+	1) read the config section of 
+	   nc.sniffer.coalesce.cgi.sample
+	2) read the config section of
+	   nc.sniffer.dump.pl.sample
+
+On the remote host, install nc.sniffer.dump.pl in an appropriate sandbox
+account and install an ssh certificate to permit access to the sandbox ssh
+executable as well as the directory from which to rsync the stats file on
+that host.
+
+nc.sniffer.dump.pl should be installed
+mode 755 or as appropriate to be accessed remotely by
+the ssh -e function.
+
+On the web host, configure nc.sniffer.coalesce.cgi and place the execution
+cgi string in your web page to produce the report
+
+  usage: <!--#exec cmd="./nc.sniffer.coalesce.cgi" -->
+
+=cut
+
+sub rem_report {
+  my $wconf = shift;
+  my $txt = '';
+  my $type = 1;			# unconditional for remote reports
+  while (1) {
+    last if ($txt = rem_wchk($wconf));	# exit on bad config file
+    my $cfile = $wconf->{cache} .'.'. $type;
+    if (chkcache($cfile,$wconf->{refresh})) {
+	eval {
+		local *CACHE;
+		local $/ = undef;
+		open(CACHE,$cfile) or die "could not open cache '$cfile'";
+		$txt = <CACHE>;
+		close CACHE;
+	};
+        $txt = $@ if $@;
+	last;
+    }
+    unless (rem_dump($wconf)) {
+      $txt = 'could not dump remotes';
+      last;
+    }
+    unless (rem_update($wconf)) {
+      $txt = 'could not update composite stats';
+      last;
+    }
+    local *REPORT;
+    if (open(REPORT,$cfile)) {
+      foreach(<REPORT>) {
+        print $_;                                     # print to STDOUT
+      }
+      close REPORT;
+    } else {
+      $txt = "could not open '$cfile'";
+    }
+    last;
+  } # end while(1)
+  print $txt,"\n" if $txt;	# spit out any errors
+}
+
 =pod
 
 =back
@@ -793,10 +1045,15 @@ sub dyn_bind {	# t => s_make_kid_Dbind.t
 	chkcache
 	get_lock
 	chk_wconf
+	rem_wchk
 	rqst_dump
 	web_report
 	my_time
 	dyn_bind
+	xhandle
+	rem_dump
+	rem_update
+	rem_report
 
 =head1 COPYRIGHT
 

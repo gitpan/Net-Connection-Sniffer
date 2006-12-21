@@ -8,6 +8,8 @@ Changes
 GPL
 nc.sniffer.cgi.sample
 nc.sniffer.pl.sample
+nc.sniffer.dump.pl.sample
+nc.sniffer.coalesce.cgi.sample
 rc.nc.sniffer.sample
 recurse2txt
 typemap

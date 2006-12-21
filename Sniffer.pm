@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.18 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.20 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -351,6 +351,33 @@ details.
 
 where an argument of "0" produces a report ordered by /24 by usage and an
 argument of "1" produces a report ordered by subdomain by usage.
+
+=head1 REMOTE CONFIGURATION, multiple hosts
+
+To configure the reporting function to retrieve statistics from multiple
+remote hosts (and localhost) do the following:
+
+        1) read the config section of
+           nc.sniffer.coalesce.cgi.sample
+        2) read the config section of
+           nc.sniffer.dump.pl.sample 
+
+On the remote host(s), install nc.sniffer.dump.pl in an appropriate sandbox
+account and install an ssh certificate to permit access to the sandbox ssh
+executable as well as the directory from which to rsync the stats file on 
+that host.
+
+nc.sniffer.dump.pl should be installed
+mode 755 or as appropriate to be accessed remotely by
+the ssh -e function.
+
+On the web host, configure nc.sniffer.coalesce.cgi and place the execution
+cgi string in your web page to produce the report
+
+nc.sniffer.coalesce.cgi should be SUID to the local user, not root, so that
+the web engine can safely execute the script.
+
+  usage: <!--#exec cmd="./nc.sniffer.coalesce.cgi" -->
 
 =head1 OPERATION
 
