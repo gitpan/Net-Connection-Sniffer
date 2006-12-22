@@ -42,7 +42,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.07 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.08 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -926,7 +926,8 @@ sub rem_update {
     my($sf,$ft) = read_stf($_);
     $hits += $1 if $ft =~ /hits:\s+(\d+)/;
     $bytes += $1 if $ft =~ /bytes:\s+(\d+)/;
-    $users += $1 if $ft =~ /users:\s+(\d+)/;
+# some users may be in all hosts, this is not a reasonable sum
+#    $users += $1 if $ft =~ /users:\s+(\d+)/;
     $txt .= $ft;
     foreach (keys %$sf) {
       if (exists $stats->{$_}) {
@@ -950,7 +951,6 @@ sub rem_update {
 # grand total all hosts
 # hits: \t$hits per minute
 # bytes:\t$bytes per second
-# users:\t$users
 |;
   print CACHE 'my ',&Data::Dumper::Dumper($stats);
   close CACHE;

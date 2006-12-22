@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.20 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.21 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -374,8 +374,10 @@ the ssh -e function.
 On the web host, configure nc.sniffer.coalesce.cgi and place the execution
 cgi string in your web page to produce the report
 
-nc.sniffer.coalesce.cgi should be SUID to the local user, not root, so that
-the web engine can safely execute the script.
+nc.sniffer.coalesce.cgi should be SUID to the web user, not root, so that
+the web engine can safely execute the script. The ssh certificate must be
+generated for the web user and go in the nobody:nogroup/.ssh directory 
+(or equivalent web user directory).
 
   usage: <!--#exec cmd="./nc.sniffer.coalesce.cgi" -->
 

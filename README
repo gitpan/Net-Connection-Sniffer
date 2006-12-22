@@ -117,8 +117,10 @@ REMOTE CONFIGURATION, multiple hosts
     On the web host, configure nc.sniffer.coalesce.cgi and place the
     execution cgi string in your web page to produce the report
 
-    nc.sniffer.coalesce.cgi should be SUID to the local user, not root, so
-    that the web engine can safely execute the script.
+    nc.sniffer.coalesce.cgi should be SUID to the web user, not root, so
+    that the web engine can safely execute the script. The ssh certificate
+    must be generated for the web user and go in the nobody:nogroup/.ssh
+    directory (or equivalent web user directory).
 
       usage: <!--#exec cmd="./nc.sniffer.coalesce.cgi" -->
 

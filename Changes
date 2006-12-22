@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.21  Thu Dec 21 17:41:45 PST 2006
+	update documentation and report formatting in Report.pm v0.08
+
 0.20  Thu Dec 21 15:25:51 PST 2006
 	fix problem in Report.pm v0.07 where localhost is not updated
 	with a rem_update
