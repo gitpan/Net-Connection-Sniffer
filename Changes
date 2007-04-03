@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.22  Mon Apr  2 18:14:04 PDT 2007
+	add SOA lookup of hostname where DNS query result is NXDOMAIN
+
 0.21  Thu Dec 21 17:41:45 PST 2006
 	update documentation and report formatting in Report.pm v0.08
 

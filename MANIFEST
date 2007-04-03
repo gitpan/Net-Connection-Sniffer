@@ -20,6 +20,7 @@ t/chk_wconf.t
 t/chkcache.t
 t/constants.t
 t/dns_expire.t
+t/dns_recv.t
 t/dyn_bind.t
 t/equal.t
 t/get_lock.t

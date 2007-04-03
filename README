@@ -391,6 +391,12 @@ DUMP FILE FORMAT
               next IP address => {
                 ...
 
+        NOTE: if the hostname lookup results in an NXDOMAIN return, the
+        hostname will be parsed from the SOA record and presented prefixed
+        with a colon
+
+          i.e.  ':soahost.com'
+
 EXPORTS
     Only one function is exported by Sniffer.pm. This function is called in
     the nc.sniffer.pl.sample script to launch the nc.sniffer daemon.

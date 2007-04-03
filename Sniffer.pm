@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.21 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.22 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -77,6 +77,7 @@ use Proc::PidUtil qw(
 );
 use Net::DNS::Codes qw(  
 	T_PTR
+	T_SOA
 	C_IN
 	BITS_QUERY 
 	RD
@@ -661,6 +662,11 @@ Time values are seconds since the epoch.
       next IP address => {
 	...
 
+NOTE: if the hostname lookup results in an NXDOMAIN return, the hostname
+will be parsed from the SOA record and presented prefixed with a colon
+
+  i.e.	':soahost.com'
+
 =back
 
 =head1 EXPORTS
@@ -1177,13 +1183,18 @@ sub dns_rcv {		# tested by hand
   my ($off,$id,$qr,$opcode,$aa,$tc,$rd,$raa,$mbz,$ad,$cd,$rcode,
 	$qdcount,$ancount,$nscount,$arcount)
 	= gethead(\$msg);
+
   return (&RECV_dns) unless
 	$tc == 0 &&
 	$qr == 1 &&
 	$opcode == QUERY &&
-	($rcode == NOERROR || $rcode == NXDOMAIN || $rcode == SERVFAIL) &&
 	$qdcount == 1 &&
-	$ancount > 0 &&
+	$rcode != SERVFAIL &&
+	(($rcode == NOERROR && $ancount > 0) || ($rcode == NXDOMAIN && $nscount > 0)) &&
+#	$opcode == QUERY &&
+#	($rcode == NOERROR || $rcode == NXDOMAIN || $rcode == SERVFAIL) &&
+#	$qdcount == 1 &&
+#	$ancount > 0 &&
 	exists $dns->{$id};
   my $naddr = $dns->{$id}->{IP};				# originating thread
   delete $dns->{$id};						# remove dns query thread
@@ -1194,14 +1205,28 @@ sub dns_rcv {		# tested by hand
   my($name,$t,$type,$class,$ttl,$rdl,@rdata);
   ($off,$name,$type,$class) = $get->Question(\$msg,$off);
   my @answers;
-  if (  $rcode == &NOERROR &&
+  return (&RECV_dns) unless
 	$type == T_PTR &&
-	$class == C_IN
-  ) {
+	$class == C_IN;
+  if ($rcode == &NOERROR) {
     foreach(0..$ancount -1) {
       ($off,$name,$t,$class,$ttl,$rdl,@rdata) = $get->next(\$msg,$off);
+
       if ($t == T_PTR) {
 	push @answers,@rdata;
+      }
+    }
+  }
+  elsif ($rcode == &NXDOMAIN) {
+    foreach(0..($ancount -1)) {
+      $get->next(\$msg,$off);					# flush any answers and NS records
+    }
+    foreach(0..$nscount -1) {
+      my $mname;
+      ($off,$name,$t,$class,$ttl,$rdl,$mname,@rdata) = $get->next(\$msg,$off);
+      if ($t == T_SOA) {
+	push @answers, ':'. $mname;
+	last;
       }
     }
   }
