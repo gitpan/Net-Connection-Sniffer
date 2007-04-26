@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.23  Wed Apr 25 16:52:52 PDT 2007
+	add redundant DNS name reporting to compensate for occasional
+	missing rDNS entries for remote hosts
+
 0.22  Mon Apr  2 18:14:04 PDT 2007
 	add SOA lookup of hostname where DNS query result is NXDOMAIN
 

@@ -42,7 +42,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.08 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.09 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -937,6 +937,12 @@ sub rem_update {
 		if $stats->{$_}->{E} < $sf->{$_}->{C};
         $stats->{$_}->{R} += $sf->{$_}->{R};
         $stats->{$_}->{W} += $sf->{$_}->{W};
+	my $ipk = $_;
+	foreach my $n (@{$sf->{$ipk}->{N}}) {
+	  unless (grep(/$n/,@{$stats->{$ipk}->{N}})) {
+	    push @{$stats->{$ipk}->{N}}, $n;
+	  }
+	}
       }
       else {
         $stats->{$_} = $sf->{$_};
