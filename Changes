@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.24  Mon Jan 14 11:48:04 PST 2008
+	force timecheck every second, even if very busy
+	so that old IP's will expire
+
 0.23  Wed Apr 25 16:52:52 PDT 2007
 	add redundant DNS name reporting to compensate for occasional
 	missing rDNS entries for remote hosts

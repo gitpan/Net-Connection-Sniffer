@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.23 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.24 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -1298,7 +1298,7 @@ L<Sys::Sig>
 
 =head1 BUGS
 
-There is memory in when run under Perl 5.0503 that has not yielded to debug
+There is a memory leak when run under Perl 5.0503 that has not yielded to debug
 attempts. This leak is not present in Perl 5.0601. Not tested in other
 versions. From reading through the Changes file for the transition between
 versions 5.005 and 5.6, I'm reasonably sure it is a scalar leak in Perl

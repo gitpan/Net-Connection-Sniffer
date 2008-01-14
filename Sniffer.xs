@@ -780,6 +780,9 @@ xs_while(vector,...)
 	  if (lFD != 0)			/*	if active			*/
 	    FD_SET(lFD,&rset);
 
+	  if (now > nextp)		/*	if one second timeout exceeded	*/
+	    goto TIMEFORCE;
+
 	  tloop.tv_sec = 1;		/*	wake up every second		*/
 	  tloop.tv_usec = 0;
 	  nfound = select(max,&rset,&wset,NULL,&tloop);
@@ -844,6 +847,7 @@ xs_while(vector,...)
 
 	TIMECHECK:
 	  if (now > nextp) {		/* purge once a second			*/
+	TIMEFORCE:
 	    nextp = now;
 	    if (run > 0)
 	      run--;
