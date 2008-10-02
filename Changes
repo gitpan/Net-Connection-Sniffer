@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.25  Thu Oct  2 13:39:49 PDT 2008
+	add CPAN automated tester cutout if pcap lib is not installed
+
 0.24  Mon Jan 14 11:48:04 PST 2008
 	force timecheck every second, even if very busy
 	so that old IP's will expire

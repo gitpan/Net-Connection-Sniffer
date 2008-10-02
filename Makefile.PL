@@ -1,5 +1,11 @@
 use ExtUtils::MakeMaker;
 use Config;
+use lib qw(inc);
+use Devel::CheckLib;
+# check that 'pcap' lib is installed
+check_lib_or_exit(
+	lib	=> 'pcap',
+);
 
 my $pkg = 'Net::Connection::Sniffer';
 $pkg =~ /[^:]+$/;
