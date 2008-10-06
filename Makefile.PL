@@ -18,6 +18,7 @@ my %makeparms = (
     'NAME'		=> $pkg,
     'VERSION_FROM'	=> $module, # finds $VERSION
     'PREREQ_PM'		=> {
+				Devel::CheckLib		=> 0,
 				Net::DNS::Codes		=> 0.08,
 				Net::DNS::ToolKit	=> 0.26,
 				Net::Interface		=> 0.08,
