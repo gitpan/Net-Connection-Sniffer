@@ -18,9 +18,9 @@ my %makeparms = (
     'NAME'		=> $pkg,
     'VERSION_FROM'	=> $module, # finds $VERSION
     'PREREQ_PM'		=> {
-				Devel::CheckLib		=> 0,
-				Net::DNS::Codes		=> 0.08,
-				Net::DNS::ToolKit	=> 0.26,
+				Devel::CheckLib		=> 0.5,
+				Net::DNS::Codes		=> 0.09,
+				Net::DNS::ToolKit	=> 0.41,
 				Net::Interface		=> 0.08,
 				Net::NBsocket		=> 0.12,
 				Sys::Hostname::FQDN	=> 0.07,
@@ -56,3 +56,9 @@ README  : |. $module .q|
 }
 
 WriteMakefile(%makeparms);
+
+require Devel::CheckLib;
+# check that 'pcap' lib is installed
+Devel::CheckLib::check_lib_or_exit(
+	lib	=> 'pcap',
+);

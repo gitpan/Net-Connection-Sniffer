@@ -1,7 +1,11 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.27  Wed Oct 15 14:19:29 PDT 2008
+	include Devel::CheckLib version level
+	require Net::DNS::ToolKit verison 0.41 or higher
+
 0.26  Mon Oct  6 14:02:13 PDT 2008
-	include Devop::CheckLib in prereques
+	include Devel::CheckLib in prereques
 
 0.25  Thu Oct  2 13:39:49 PDT 2008
 	add CPAN automated tester cutout if pcap lib is not installed

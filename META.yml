@@ -1,15 +1,15 @@
 --- #YAML:1.0
 name:                Net-Connection-Sniffer
-version:             0.26
+version:             0.27
 abstract:            ~
 license:             ~
 author:              ~
 generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
-    Devel::CheckLib:               0
-    Net::DNS::Codes:               0.08
-    Net::DNS::ToolKit:             0.26
+    Devel::CheckLib:               0.5
+    Net::DNS::Codes:               0.09
+    Net::DNS::ToolKit:             0.41
     Net::Interface:                0.08
     Net::NBsocket:                 0.12
     NetAddr::IP::Util:             0.11
