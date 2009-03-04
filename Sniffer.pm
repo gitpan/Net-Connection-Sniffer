@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.27 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.29 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -60,7 +60,7 @@ $VERSION = do { my @r = (q$Revision: 0.27 $ =~ /\d+/g); sprintf "%d."."%02d" x $
 				DNS_NEEDED DUMP_REQUEST DNS_RECEIVE PURGE RECV_dns)],
 );
 
-use Net::Interface;
+use Net::Interface 1.007 qw(:afs);
 use NetAddr::IP::Util qw(
 	sub128
 	inet_aton
@@ -126,6 +126,9 @@ my $snaplen 	= $minlen;
 my $oneday	= 86400;			# WARNING, set in XS also
 my $unique	= $$ -1;			# dns sequence number
 my($match,$nomatch,$payoff);
+
+my $af_inet6 = eval { AF_INET6() };
+$af_inet6 = 0 if $@;
 
 #################################################
 ##### global vars reset by HUP
@@ -923,35 +926,45 @@ sub clean_child() {
 #
 # input:	ipv4 or ipv6 network address
 # returns:	interface,
-#		promiscious [t/f]
+#		need promiscious [t/f]
 
 sub get_if($) {
   my $naddr = ipanyto6(shift);
-  my($match,@net);
-  foreach my $if (Net::Interface->interfaces()) {
-    my $iddr = $if->address;
-    next unless $iddr;
-    $iddr = ipanyto6($iddr);
-    if ($naddr eq $iddr) {
-      $match = $if->name;
-      last;
+  my %net;
+  my @ifs = interfaces Net::Interface ();
+IF:
+  foreach my $if (@ifs) {
+    my @addrs = $if->address(AF_INET());
+    my @netms = $if->netmask(AF_INET());
+    if ($af_inet6) {
+      push @addrs, $if->address($af_inet6);
+      push @netms, $if->netmask($af_inet6);
     }
-    my $mask = maskanyto6($if->netmask);
-    my $net = $iddr & $mask;
-    my $bcst = $iddr | ~$mask;
-    push @net, $if->name				# mark net available
-	if sub128($naddr,$net) && sub128($bcst,$naddr);	# within cidr
+    foreach (0..$#addrs) {
+      my $iddr = ipanyto6($addrs[$_]);
+      my $name = $if->name();
+      if ($naddr eq $iddr) {
+	$match = $name;
+	last IF;
+      }
+      my $mask = maskanyto6($netms[$_]);
+      my $net = $iddr & $mask;
+      my $bcst = $iddr | ~$mask;
+      $name = $1 if $name =~ /(.+)\:/;			# for linux, fix aliases
+      $net{$name} = $iddr
+	if sub128($naddr,$net) && sub128($bcst,$naddr);	# within CIDR
+    }
   }
-  my $pmsc = 0;
-  if (!$match && ($pmsc = @net)) {
-    @_ = sort @net;					# sort colons to end. i.e. eth0:3
+  @_ = sort keys %net;
+  my $pmsc = @_;
+  if (!$match && $pmsc) {
     $match = shift @_;
   }
   return (wantarray)
 	? ($match,$pmsc)
 	: $match;
 }
-    
+
 #			  ETHERNET HEADER
 # +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 # |       Ethernet destination address (first 32 bits)            |

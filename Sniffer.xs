@@ -2,7 +2,7 @@
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-
+/*
 #include <time.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -13,6 +13,8 @@
 #include <ctype.h>
 
 #include <pcap.h>
+*/
+#include "defaults.h"
 
 #ifndef NV
 #define NV double
@@ -26,10 +28,6 @@ newSVuv(U32 in)
   sv_setuv(out,in);
   return out;
 }
-#endif
-
-#ifndef IP_HLEN
-#define IP_HLEN 0x14
 #endif
 
 #define minlen	ETH_HLEN + IP_HLEN + 4		/* need src/dst ports in packet for filtering	*/
@@ -47,18 +45,14 @@ union buffer
 {
 	unsigned char e[PCAP_ERRBUF_SIZE+1];
 	unsigned char s[512];
-};
-
-union buffer	out;
+} out;
 
 union naddr
 {
 	unsigned char	s[4];
 	u_int32_t	host;
 	struct in_addr	naddr;
-};
-
-union naddr     me, trgt;
+} me, trgt;
 
 /*	'dumptofile' is the flag indicating that this is/is not a dump to file/STDERR
 	'signal_dump' is the flag indicating a dump was initiated by a signal
@@ -479,7 +473,7 @@ xs_daemon_init(sniffer,hpref,dnsref,nhost,dnshost,port,listenon,bpfstr,dev,snapl
 	unsigned char * ip, * lip, * sniffp;
 	STRLEN	len;
 	char	errorbuf[PCAP_ERRBUF_SIZE+1];
-	struct bpf_program * real_fp = safemalloc(sizeof(struct bpf_program));
+	struct bpf_program real_fp;
     CODE:
 	pktlen = snaplen;
 	if (SvPOK(sniffer) == 0)
@@ -551,11 +545,11 @@ xs_daemon_init(sniffer,hpref,dnsref,nhost,dnshost,port,listenon,bpfstr,dev,snapl
 	  croak("error: %s",errorbuf);
 	if (pcap_lookupnet(dev,&netp,&maskp,errorbuf) < 0)
 	  croak("error: %s",errorbuf);
-	if (pcap_compile(pcap,real_fp,bpfstr,1,maskp) < 0)
+	if (pcap_compile(pcap,&real_fp,bpfstr,1,maskp) < 0)
 	  croak("error: %s", pcap_geterr(pcap));
-	if (pcap_setfilter(pcap,real_fp) < 0)
+	if (pcap_setfilter(pcap,&real_fp) < 0)
 	  croak("error: %s", pcap_geterr(pcap));
-	pcap_freecode(real_fp);
+	pcap_freecode(&real_fp);
 	if (pcap_setnonblock(pcap,1,errorbuf) < 0)
 	  croak("error: %s",errorbuf);
 	if ((pFD =  pcap_get_selectable_fd(pcap)) < 1)

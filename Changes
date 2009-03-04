@@ -1,5 +1,24 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.29  Wed Feb 25 21:44:14 PST 2009
+	update get_if() to use Net::Interface 1.00x
+
+	remove early "use Devel::CheckLib" so that automated
+	test routines have a chance to find in the the Makefile.pl
+	prerequisites list.
+
+	add definitions of ETH_HLEN and IP_HDR
+	for systems that don't provide it
+
+	add "configure" script
+
+	remove dependency of Devel::CheckLib
+
+0.28  NOT RELEASED
+	correct dependencies in Makefile.PL
+
+	kill small memory leak
+
 0.27  Wed Oct 15 14:19:29 PDT 2008
 	include Devel::CheckLib version level
 	require Net::DNS::ToolKit verison 0.41 or higher

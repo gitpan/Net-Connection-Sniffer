@@ -1,11 +1,6 @@
 use ExtUtils::MakeMaker;
 use Config;
 use lib qw(inc);
-use Devel::CheckLib;
-# check that 'pcap' lib is installed
-check_lib_or_exit(
-	lib	=> 'pcap',
-);
 
 my $pkg = 'Net::Connection::Sniffer';
 $pkg =~ /[^:]+$/;
@@ -18,20 +13,24 @@ my %makeparms = (
     'NAME'		=> $pkg,
     'VERSION_FROM'	=> $module, # finds $VERSION
     'PREREQ_PM'		=> {
-				Devel::CheckLib		=> 0.5,
 				Net::DNS::Codes		=> 0.09,
 				Net::DNS::ToolKit	=> 0.41,
-				Net::Interface		=> 0.08,
-				Net::NBsocket		=> 0.12,
+				Net::Interface		=> 1.008,
+				Net::NBsocket		=> 0.14,
 				Sys::Hostname::FQDN	=> 0.07,
-				Proc::PidUtil		=> 0.07,
-				NetAddr::IP::Util	=> 0.11,
-				Sys::Sig		=> 0.02,
+				Proc::PidUtil		=> 0.08,
+				NetAddr::IP		=> 4.024,
+				Sys::Sig		=> 0.03,
 			},
     'LIBS'		=> '-lpcap',
-    'clean'		=> { FILES    => "*~ tmp*"},
+    'clean'		=> { FILES    => "*~ tmp* auto*"},
+    'realclean'		=> { FILES    => "config.h config.log config.status"},
     'dist'		=> {COMPRESS=>'gzip', SUFFIX=>'gz'}
 );
+
+unless (-e './config.h') {
+  system('./configure');
+}
 
 sub MY::top_targets {
   package MY;
@@ -57,8 +56,16 @@ README  : |. $module .q|
 
 WriteMakefile(%makeparms);
 
-require Devel::CheckLib;
-# check that 'pcap' lib is installed
-Devel::CheckLib::check_lib_or_exit(
-	lib	=> 'pcap',
-);
+unless (open(F,'./config.h')) {
+  warn "can not find ./config.h\n";
+  exit;
+}
+
+unless (grep {/#define HAVE_PCAP/} (<F>)) {
+  close F;
+  warn "prerequisite 'libpcap' not found\n";
+  exit;
+}
+close F;
+
+

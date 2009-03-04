@@ -1,11 +1,15 @@
 MANIFEST
-MANIFEST.skip
+MANIFEST.SKIP
 README
 Makefile.PL
 Sniffer.pm
 Sniffer.xs
 Changes
 GPL
+config.h.in
+configure
+configure.ac
+defaults.h
 nc.sniffer.cgi.sample
 nc.sniffer.pl.sample
 nc.sniffer.dump.pl.sample
