@@ -35,9 +35,12 @@ AC_CHECK_TYPES([struct iphdr, struct ether_header],[],[],[
 #include <netinet/ether.h>
 #endif
 ])
+
+AH_TEMPLATE([LIBS],[Extra libraries needed for this build])
+
 AH_TEMPLATE([HAVE_PCAP],[Define to 1 if pcap lib is present])
 AC_SEARCH_LIBS([pcap_close],[pcap],[
-        AC_DEFINE([HAVE_PCAP])],[],[-shared])
+        AC_DEFINE([HAVE_PCAP])],[],[$LDDLFLAGS])
 
 AC_PROG_GCC_TRADITIONAL
 
@@ -59,5 +62,12 @@ AC_CHECK_SIZEOF([uint32_t])
 AC_CHECK_SIZEOF([u_int8_t])
 AC_CHECK_SIZEOF([u_int16_t])
 AC_CHECK_SIZEOF([u_int32_t])
+
+AH_TEMPLATE([LIBS],[Extra libraries needed for this build])
+AC_CONFIG_COMMANDS_PRE([
+	if test "$LIBS" != ""; then
+	AC_DEFINE_UNQUOTED([LIBS],[$LIBS],[Extra libraries])
+	fi
+])
 
 AC_OUTPUT

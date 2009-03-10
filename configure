@@ -3553,6 +3553,10 @@ fi
 
 
 
+
+
+
+
 { echo "$as_me:$LINENO: checking for library containing pcap_close" >&5
 echo $ECHO_N "checking for library containing pcap_close... $ECHO_C" >&6; }
 if test "${ac_cv_search_pcap_close+set}" = set; then
@@ -3586,7 +3590,7 @@ for ac_lib in '' pcap; do
     ac_res="none required"
   else
     ac_res=-l$ac_lib
-    LIBS="-l$ac_lib -shared $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib $LDDLFLAGS $ac_func_search_save_LIBS"
   fi
   rm -f conftest.$ac_objext conftest$ac_exeext
 if { (ac_try="$ac_link"
@@ -7104,6 +7108,10 @@ _ACEOF
 
 
 
+
+
+
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -7199,6 +7207,15 @@ LIBOBJS=$ac_libobjs
 
 LTLIBOBJS=$ac_ltlibobjs
 
+
+
+	if test "$LIBS" != ""; then
+
+cat >>confdefs.h <<_ACEOF
+#define LIBS $LIBS
+_ACEOF
+
+	fi
 
 
 : ${CONFIG_STATUS=./config.status}

@@ -1,4 +1,7 @@
+blib
+work
 Makefile$
+Sniffer.c
 config.log
 config.status
 config.h

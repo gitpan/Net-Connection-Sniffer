@@ -1,5 +1,13 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.30  Sat Mar  7 12:11:24 PST 2009
+	add compiler and linker flags to environment for various
+	shared "flags" and hosts that put "libpcap" in /usr/local
+	instead of /usr
+
+	clean up "char/u_char" casting differences in Sniffer.xs
+	for picky Solaris compiler
+
 0.29  Wed Feb 25 21:44:14 PST 2009
 	update get_if() to use Net::Interface 1.00x
 

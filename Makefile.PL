@@ -6,31 +6,94 @@ my $pkg = 'Net::Connection::Sniffer';
 $pkg =~ /[^:]+$/;
 my $module = $& .'.pm';
 
+# extra libs we would like to have that perl does not,
+# a SPACE separated list
+#
+# put a test for them in configure.ac and let the script
+# below find and insert them. Make sure and add the necessary
+# paths in %makeparms for INC and LIBS but not the library itself
+#
+my $wish_libs = '-lpcap';
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
 my %makeparms = (
-    'NAME'		=> $pkg,
-    'VERSION_FROM'	=> $module, # finds $VERSION
-    'PREREQ_PM'		=> {
+    NAME		=> $pkg,
+    VERSION_FROM	=> $module, # finds $VERSION
+    PREREQ_PM		=> {
 				Net::DNS::Codes		=> 0.09,
-				Net::DNS::ToolKit	=> 0.41,
-				Net::Interface		=> 1.008,
+				Net::DNS::ToolKit	=> 0.42,
+				Net::Interface		=> 1.009,
 				Net::NBsocket		=> 0.14,
-				Sys::Hostname::FQDN	=> 0.07,
+				Sys::Hostname::FQDN	=> 0.10,
 				Proc::PidUtil		=> 0.08,
-				NetAddr::IP		=> 4.024,
-				Sys::Sig		=> 0.03,
+				NetAddr::IP		=> 4.026,
+				Sys::Sig		=> 0.04,
 			},
-    'LIBS'		=> '-lpcap',
-    'clean'		=> { FILES    => "*~ tmp* auto*"},
-    'realclean'		=> { FILES    => "config.h config.log config.status"},
-    'dist'		=> {COMPRESS=>'gzip', SUFFIX=>'gz'}
+# LIBS list should be a single string to be compatible with script below
+    LIBS		=> '-L/usr/local/lib',
+    INC			=> '-I/usr/local/include',
+    clean		=> { FILES    => "*~ tmp* auto*"},
+    realclean		=> { FILES    => "config.h config.log config.status"},
+    dist		=> {COMPRESS=>'gzip', SUFFIX=>'gz'}
 );
 
-unless (-e './config.h') {
-  system('./configure');
+################################################
+# fix up compile and link flags for "configure"
+################################################
+my %addflags = (
+	ldflags		=> $makeparms{LIBS},
+	lddlflags	=> $makeparms{LIBS},
+	ccflags		=> $makeparms{INC},
+);
+
+my $cfgstrg = '';
+foreach (sort keys %addflags) {
+  my $KEY = uc $_;
+  my $oldstuff = $Config{$_} =~ /(\S.+)/ ? $1 : '';
+  $oldstuff .= ' ' if $oldstuff && $oldstuff !~ / $/;
+#print "$_, $KEY, $oldstuff, $addflags{$_}\n";
+  unless ($oldstuff =~ m|$addflags{$_}|) {
+    $oldstuff .= $addflags{$_};
+  }
+  $cfgstrg .= qq|$KEY="$oldstuff" |;
 }
+
+unless (-e './config.h') {
+  my $command = qq|./configure $cfgstrg|;
+  print $command,"\n";
+  system($command);   
+}
+
+###################################
+# fix up lib list
+###################################
+
+my %LIBS;
+open(F,'config.h') or die "could not open config.h\n";
+foreach(<F>) {
+  if ($_ =~ /^#define LIBS([ a-zA-Z-]+)/) {
+# make lib list unique
+    map {$LIBS{$_} = 1} ($1 =~ /[a-zA-Z0-9-]+/g);
+    last;
+  }
+}
+close F;
+
+my $liblist = $Config{libs} .' '. $wish_libs;
+
+my $link = $makeparms{LIBS} =~ /(\S.+)/ ? $1 : '';
+$link .= ' ' unless $link =~ / $/;
+foreach(keys %LIBS) {
+  if ($liblist =~ /$_\b/) {
+    $link .= $_ .' ';   
+  }
+}
+chop $link;
+$makeparms{LIBS} = [$link];
+
+###################################
 
 sub MY::top_targets {
   package MY;
@@ -61,11 +124,10 @@ unless (open(F,'./config.h')) {
   exit;
 }
 
-unless (grep {/#define HAVE_PCAP/} (<F>)) {
+unless (scalar grep {/#define\s+HAVE_PCAP/} (<F>)) {
   close F;
-  warn "prerequisite 'libpcap' not found\n";
+  warn "prerequisite 'libpcap' (-lpcap) not found\n";
   exit;
 }
 close F;
-
 

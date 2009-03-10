@@ -209,7 +209,7 @@ set_signals (void)
 
 
 u_int32_t
-fetch_uv(HV * hp, u_char * key)
+fetch_uv(HV * hp, char * key)
 {
   u_int32_t val;
 /*	perl likes to store ints as NV's so
@@ -224,28 +224,28 @@ fetch_uv(HV * hp, u_char * key)
 }
 
 void
-set_uv(HV * hp, u_char * key, u_int32_t val)
+set_uv(HV * hp, char * key, u_int32_t val)
 {
   vpp = hv_fetch(hp,key,1,1);
   sv_setuv(*vpp, val);
 }
 
 void
-inc_sv(HV * hp, u_char * key)
+inc_sv(HV * hp, char * key)
 {
   vpp = hv_fetch(hp,key,1,0);
   sv_inc(*vpp);
 }
 
 void
-set_nv(HV * hp, u_char * key, double val)
+set_nv(HV * hp, char * key, double val)
 {
   vpp = hv_fetch(hp,key,1,1);
   sv_setnv(*vpp, val);
 }
 
 void
-add_nv(HV * hp, u_char * key, u_int32_t val)
+add_nv(HV * hp, char * key, u_int32_t val)
 {
   vpp = hv_fetch(hp,key,1,0);
   sv_setnv(*vpp, SvNVX(*vpp) + val);
@@ -253,7 +253,7 @@ add_nv(HV * hp, u_char * key, u_int32_t val)
 
 /*	NV = (NV + UV) * NV	*/
 void
-aEQaPLUSbXm(HV * hp, u_char * key1, u_char * key2, double multiply)
+aEQaPLUSbXm(HV * hp, char * key1, char * key2, double multiply)
 {
   double tmpb;
 
@@ -315,11 +315,11 @@ sniffit(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes)
 
 /*	drop if match needed and not found	*/
 
-    if (match != NULL && strstr(haystack,match) == NULL) {
+    if (match != NULL && strstr((char *)haystack,(char *)match) == NULL) {
       return;
     }
 /*	drop if no match needed and found	*/
-    if (nomatch != NULL && strstr(haystack,match) != NULL) {
+    if (nomatch != NULL && strstr((char *)haystack,(char *)match) != NULL) {
       return;
     }
   }
@@ -360,8 +360,8 @@ sniffit(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes)
   }
 
 /*	collect user stats		*/
-  if (hv_exists(stats,trgt.s,4)) {
-    vpp		= hv_fetch(stats,trgt.s,4,0);
+  if (hv_exists(stats,(char *)trgt.s,4)) {
+    vpp		= hv_fetch(stats,(char *)trgt.s,4,0);
     dusr	= (HV *)SvRV(*vpp);
 
     if ((e = fetch_uv(dusr,"E")) + nxtupd > now ||
@@ -389,11 +389,11 @@ sniffit(u_char *user, const struct pcap_pkthdr *h, const u_char *bytes)
   } else {
     dusr	= newHV();
     init_hv(dusr,len);
-    hv_store(stats,trgt.s,4,newRV_noinc((SV *)dusr),0);
+    hv_store(stats,(char *)trgt.s,4,newRV_noinc((SV *)dusr),0);
   }
   if ((fetch_uv(dusr,"T")) < now) {
     dnsRflag = 1;
-    av_push(dnsrequest,newSVpv(trgt.s,4));
+    av_push(dnsrequest,newSVpv((char *)trgt.s,4));
   }
 }
 
@@ -491,14 +491,14 @@ xs_daemon_init(sniffer,hpref,dnsref,nhost,dnshost,port,listenon,bpfstr,dev,snapl
 
 	if (SvPOK(nhost) == 0)
 	  croak("nhost is not a netaddr");
-	ip = SvPV(nhost,len);
+	ip = (u_char *)SvPV(nhost,len);
 	if (len != 4)
 	  croak("nhost length of netaddr length is %d, should be 4", len);
-	strncpy(me.s,ip,4);
+	strncpy((char *)me.s,(char *)ip,4);
 
 	if (SvPOK(dnshost) == 0)
 	  croak("dnshost is not a netaddr");
-	ip = SvPV(dnshost,len);
+	ip = (u_char *)SvPV(dnshost,len);
 	if (len != 4)
 	  croak("dnshost length of netaddr length is %d, should be 4", len);
 	bzero(&dnsaddr.sa,socklen);
@@ -512,7 +512,7 @@ xs_daemon_init(sniffer,hpref,dnsref,nhost,dnshost,port,listenon,bpfstr,dev,snapl
 	if(port != 0) {
 	  if (SvPOK(listenon) == 0)
 	    croak("listen is not a netaddr");
-	  lip = SvPV(listenon,len);
+	  lip = (u_char *)SvPV(listenon,len);
 	  if (len != 4)
 	    croak("listen netaddr length is %d, should be 4", len);
 
@@ -528,15 +528,15 @@ xs_daemon_init(sniffer,hpref,dnsref,nhost,dnshost,port,listenon,bpfstr,dev,snapl
 	    croak("could not bind 'listen on' to port %d",port);
 	}
 
-	sniffp = SvPV(sniffer,len);
-	if (strncmp("STDERR",sniffp,6) == 0) {
+	sniffp = (u_char *)SvPV(sniffer,len);
+	if (strncmp("STDERR",(char *)sniffp,6) == 0) {
 	  fcntl(fileno(stderr), F_SETFL, O_NONBLOCK);
 	  dumptofile = 0;
 	  WFD = stderr;
 	} else {
 	  dumptofile = 1;
-	  strncpy(filepath,sniffp,len +1);
-	  strncpy(tmp,sniffp,len);
+	  strncpy(filepath,(char *)sniffp,len +1);
+	  strncpy(tmp,(char *)sniffp,len);
 	  strcpy((tmp + len),".tmp");
 	}
 	wFD = 0;
@@ -654,7 +654,7 @@ xs_while(vector,...)
 		break;
 	case PRINT_dumptxt :
 		buf = (unsigned char *)SvPV(ST(1),len);
-		my_dump(buf,len);
+		my_dump((char *)buf,len);
 		break;
 	case SEND_listen :
 		if (SvPOK(ST(1)) == 0)
@@ -796,7 +796,7 @@ xs_while(vector,...)
 	  if (FD_ISSET(pFD,&rset)) {
  #	hold signals
  #	    sigprocmask (SIG_BLOCK, &sa.sa_mask, 0);
-	    pcap_dispatch(pcap,-1,sniffit,"");
+	    pcap_dispatch(pcap,-1,sniffit,(u_char *)"");
  #	    sigprocmask (SIG_UNBLOCK, &sa.sa_mask, 0);
 	    if (dnsRflag != 0) {
 	      XPUSHs(sv_2mortal(newSViv(DNS_NEEDED)));
@@ -811,8 +811,8 @@ xs_while(vector,...)
 	      EXTEND(SP,4);
 	      PUSHs(sv_2mortal(newSViv(LISTEN_MSG)));
 	      PUSHs(sv_2mortal(newSVuv(now)));
-	      PUSHs(sv_2mortal(newSVpv((unsigned char*)&sender.si.sin_addr.s_addr,4)));
-	      PUSHs(sv_2mortal(newSVpv(out.s,listenlen)));
+	      PUSHs(sv_2mortal(newSVpv((char *)&sender.si.sin_addr.s_addr,4)));
+	      PUSHs(sv_2mortal(newSVpv((char *)out.s,listenlen)));
 	      XSRETURN(4);
 	    }
 	  }
@@ -824,7 +824,7 @@ xs_while(vector,...)
 	      EXTEND(SP,3);
 	      PUSHs(sv_2mortal(newSViv(DNS_RECEIVE)));
 	      PUSHs(sv_2mortal(newSViv(dnslen)));
-	      PUSHs(sv_2mortal(newSVpv(out.s,dnslen)));
+	      PUSHs(sv_2mortal(newSVpv((char *)out.s,dnslen)));
 	      XSRETURN(3);
 	    }
 	  }
@@ -866,7 +866,7 @@ xs_while(vector,...)
 void
 inc_sv(hpp,key)
 	SV	* hpp
-	unsigned char	* key
+	char	* key
   ALIAS:
 	Net::Connection::Sniffer::fetch_uv = 1
   PREINIT:
@@ -885,7 +885,7 @@ inc_sv(hpp,key)
 void
 set_uv(hpp,key,vp)
 	SV	* hpp
-	unsigned char	* key
+	char	* key
 	SV	* vp
   ALIAS:
 	Net::Connection::Sniffer::set_nv = 2
@@ -913,8 +913,8 @@ set_uv(hpp,key,vp)
 void
 aEQaPLUSbXm(hpp,key1,key2,multi)
 	SV	* hpp
-	unsigned char	* key1
-	unsigned char	* key2
+	char	* key1
+	char	* key2
 	NV	multi
   PREINIT:
 	HV	* hp;
@@ -950,14 +950,14 @@ match_init(mtch,nomtch,paystart,paystop)
 	if (SvPOK(mtch) == 0) {
 	  match = NULL;
 	} else {
-	  match = SvPV(mtch,len);
+	  match = (u_char *)SvPV(mtch,len);
 	  if (len == 0)
 	    match = NULL;
 	}
 	if (SvPOK(nomtch) == 0) {
 	  nomatch = NULL;
 	} else {
-	  nomatch = SvPV(nomtch,len);
+	  nomatch = (u_char *)SvPV(nomtch,len);
 	  if (len == 0)
 	    nomatch = NULL;
 	}
