@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.31  Tue May 26 16:15:28 PDT 2009
+	add contrib/chkIFrunning.pl
+	a script to check if sniffer is running and restart if necessary
+
 0.30  Sat Mar  7 12:11:24 PST 2009
 	add compiler and linker flags to environment for various
 	shared "flags" and hosts that put "libpcap" in /usr/local

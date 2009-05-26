@@ -127,7 +127,7 @@ unless (open(F,'./config.h')) {
 unless (scalar grep {/#define\s+HAVE_PCAP/} (<F>)) {
   close F;
   warn "prerequisite 'libpcap' (-lpcap) not found\n";
-  exit;
+  exit 0;
 }
 close F;
 

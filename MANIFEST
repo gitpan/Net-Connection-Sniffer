@@ -17,6 +17,8 @@ nc.sniffer.coalesce.cgi.sample
 rc.nc.sniffer.sample
 recurse2txt
 typemap
+contrib/chkIFrunning.pl
+contrib/README.chkIFrunning
 lib/Net/Connection/Sniffer/Util.pm
 lib/Net/Connection/Sniffer/Report.pm
 t/check_config.t
