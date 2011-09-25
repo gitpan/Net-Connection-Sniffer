@@ -4,11 +4,12 @@ package Net::Connection::Sniffer::Report;
 use strict;
 #use diagnostics;
 
-use Net::NBsocket qw(
+use Net::NBsocket 0.16 qw(
 	open_udpNB
 	sockaddr_in
 	inet_ntoa
 	inet_aton
+	dyn_bind
 );
 use Sys::Hostname::FQDN qw(
 	fqdn
@@ -42,7 +43,9 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.09 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.10 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+
+*dyn_bind = \&Net::NBsocket::dyn_bind;
 
 require Exporter;
 @ISA = qw(Exporter);
@@ -796,6 +799,8 @@ sub my_time {
  
 =item * $port = dyn_bind($sock,$iaddr);
 
+	re-exported from Net::NBsocket
+
 Attempt to bind a socket to the IP address and the first available 
 dynamic assigned port, in the range 49152 through 65535. Fails after
 100 attempts
@@ -804,16 +809,6 @@ dynamic assigned port, in the range 49152 through 65535. Fails after
 		IP addr as returned by inet_aton
   returns:	port number or undef
 
-=cut
-
-sub dyn_bind {	# t => s_make_kid_Dbind.t
-  my($sock,$iaddr) = @_;
-  foreach(1..100) {
-    my $port = 49152 + int rand(65536 - 49152);
-    return $port if bind($sock,sockaddr_in($port,$iaddr));
-  }
-  return undef;
-}
 
 =item * $handle = xhandle($program_string);
 

@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Net-Connection-Sniffer
-version:             0.31
+version:             0.32
 abstract:            ~
 license:             ~
 author:              ~
@@ -10,7 +10,7 @@ requires:
     Net::DNS::Codes:               0.09
     Net::DNS::ToolKit:             0.42
     Net::Interface:                1.009
-    Net::NBsocket:                 0.14
+    Net::NBsocket:                 0.16
     NetAddr::IP:                   4.026
     Proc::PidUtil:                 0.08
     Sys::Hostname::FQDN:           0.1

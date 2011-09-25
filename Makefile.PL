@@ -30,6 +30,7 @@ my %makeparms = (
 				Proc::PidUtil		=> 0.08,
 				NetAddr::IP		=> 4.026,
 				Sys::Sig		=> 0.04,
+				Net::NBsocket		=> 0.16,
 			},
 # LIBS list should be a single string to be compatible with script below
     LIBS		=> '-L/usr/local/lib',

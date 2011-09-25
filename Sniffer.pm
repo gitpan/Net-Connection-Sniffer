@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.31 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.32 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -1320,24 +1320,40 @@ itself that was corrected with the updates to 5.6.
 My recommend fix for now when running with Perl versions older than 5.6 is
 to restart the daemon daily to prevent excessive memory consumption.
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT 2004 - 2011
 
-Copyright 2004 - 2006, Michael Robinton <michael@bizsystems.com>
+Michael Robinton <michael@bizsystems.com>
+
+All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License (except as noted
-otherwise in individuals sub modules)  published by
-the Free Software Foundation; either version 2 of the License, or 
-(at your option) any later version.
+it under the terms of either:
+
+  a) the GNU General Public License as published by the Free
+  Software Foundation; either version 2, or (at your option) any
+  later version, or
+
+  b) the "Artistic License" which comes with this distribution.
 
 This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of 
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
-GNU General Public License for more details.
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+the GNU General Public License or the Artistic License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+You should have received a copy of the Artistic License with this
+distribution, in the file named "Artistic".  If not, I'll be glad to provide
+one.
+
+You should also have received a copy of the GNU General Public License
+along with this program in the file named "Copying". If not, write to the
+
+        Free Software Foundation, Inc.
+        59 Temple Place, Suite 330
+        Boston, MA  02111-1307, USA
+
+or visit their web page on the internet at:
+
+        http://www.gnu.org/copyleft/gpl.html.
 
 =head1 AUTHOR
 

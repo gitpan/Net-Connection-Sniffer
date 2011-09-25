@@ -5,6 +5,7 @@ Makefile.PL
 Sniffer.pm
 Sniffer.xs
 Changes
+Artistic
 GPL
 config.h.in
 configure
