@@ -43,7 +43,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.11 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.12 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 *dyn_bind = \&Net::NBsocket::dyn_bind;
 
@@ -116,7 +116,7 @@ by B<Net::Connection::Sniffer>.
    $rv = rqst_dump($sin,$file,$age,$updto);
    web_report($wconf);
    $timestring = my_time($epoch_seconds);
-   $port = dyn_bind($sock,$iaddr);
+   $port = dyn_bind($sock,$netaddr);
    $handle = xhandle($program_string);
    $rv = rem_dump($conf);
    $rv = rem_update($config);
@@ -566,8 +566,8 @@ sub chk_wconf {
   if (exists $wc->{update}) {
     if ($wc->{update} =~ /([\w.-]+)\:(\d+)/) {	# host + port	
       return "invalid characters in host address: '$1'"
-	unless (my $iaddr = inet_aton($1));
-      $wc->{update} = sockaddr_in($2,$iaddr);
+	unless (my $netaddr = inet_aton($1));
+      $wc->{update} = sockaddr_in($2,$netaddr);
     }
     elsif ($wc->{update} =~ /^\d+$/) {		# only digits
       $wc->{update} = sockaddr_in($&,&Socket::INADDR_LOOPBACK);
@@ -797,7 +797,7 @@ sub my_time {
   return sprintf("%s %02d %02d:%02d:%02d",$months[$mon],$mday,$hour,$min,$sec);
 }
  
-=item * $port = dyn_bind($sock,$iaddr);
+=item * $port = dyn_bind($sock,$netaddr);
 
 	re-exported from Net::NBsocket
 
@@ -805,7 +805,7 @@ Attempt to bind a socket to the IP address and randomly assigned
 port number, in the range 49152 through 65535. Fails after 100 attempts
 
   input:	socket
-		IP addr as returned by inet_aton
+		netaddr as returned by inet_aton
   returns:	port number or undef
 
 

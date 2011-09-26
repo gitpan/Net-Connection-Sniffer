@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.34  Sun Sep 25 17:43:53 PDT 2011
+	this time "really" fix the typo in dyn_bind documentation
+	Net::Connection::Sniffer::Report v0.12
+
 0.33  Sun Sep 25 17:29:13 PDT 2011
 	update type on dyn_bind documentation in
 	Net::Connection::Sniffer::Report v0.11
