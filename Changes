@@ -1,7 +1,11 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.33  Sun Sep 25 17:29:13 PDT 2011
+	update type on dyn_bind documentation in
+	Net::Connection::Sniffer::Report v0.11
+
 0.32  Sun Sep 25 16:16:37 PDT 2011
-	removed dyn_bind from Net::Connection::Sniffer::Report
+	removed dyn_bind from Net::Connection::Sniffer::Report v0.10
 
 0.31  Tue May 26 16:15:28 PDT 2009
 	add contrib/chkIFrunning.pl

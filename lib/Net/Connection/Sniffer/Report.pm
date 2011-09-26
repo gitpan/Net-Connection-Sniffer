@@ -43,7 +43,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.10 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.11 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 *dyn_bind = \&Net::NBsocket::dyn_bind;
 
@@ -801,9 +801,8 @@ sub my_time {
 
 	re-exported from Net::NBsocket
 
-Attempt to bind a socket to the IP address and the first available 
-dynamic assigned port, in the range 49152 through 65535. Fails after
-100 attempts
+Attempt to bind a socket to the IP address and randomly assigned
+port number, in the range 49152 through 65535. Fails after 100 attempts
 
   input:	socket
 		IP addr as returned by inet_aton
