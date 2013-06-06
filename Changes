@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.35  Wed Jun  5 14:08:42 PDT 2013
+	in Report v0.13
+	add chk_lock to test for other processes running coalesce
+	add load average testing to reduce CPU load to 70% max
+
 0.34  Sun Sep 25 17:43:53 PDT 2011
 	this time "really" fix the typo in dyn_bind documentation
 	Net::Connection::Sniffer::Report v0.12

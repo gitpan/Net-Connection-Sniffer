@@ -6,6 +6,29 @@ my $pkg = 'Net::Connection::Sniffer';
 $pkg =~ /[^:]+$/;
 my $module = $& .'.pm';
 
+my $view = $then + 86400 < $now ? 5:0;
+
+if ($Config{osname} =~ /win/i) {
+  print q|Windows and Darwin not supported
+Volunteers welcome
+|;
+  exit 1;
+}
+  
+
+unless (eval {
+        require Sys::LoadAvg &&
+	$Sys::LoadAvg::VERSION >= 0.3
+	}) {
+  print q|
+optional Sys::LoadAvg v0.3 or greater is required if 
+you want to quench excess CPU usage during 'coalesc'
+operation.
+
+|;
+  sleep $view if $view;
+}
+
 # extra libs we would like to have that perl does not,
 # a SPACE separated list
 #

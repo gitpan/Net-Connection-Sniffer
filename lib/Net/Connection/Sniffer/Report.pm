@@ -43,7 +43,7 @@ use Net::Connection::Sniffer::Util;
 
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = do { my @r = (q$Revision: 0.12 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.13 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 *dyn_bind = \&Net::NBsocket::dyn_bind;
 
@@ -68,6 +68,7 @@ require Exporter;
 	xhandle
 	rem_dump
 	rem_update
+	chk_lock
 	rem_report
 );
 
@@ -95,6 +96,7 @@ Net::Connection::Sniffer::Report -- network profiling reports
 	xhandle
 	rem_dump
 	rem_update
+	chk_lock
 	rem_report
   };
 
@@ -916,6 +918,10 @@ sub rem_update {
   my $users = 0;
   my $txt = '';
   my $stats = {};
+  my $loadavg;
+  if ( eval { require Sys::LoadAvg} ) {
+    $loadavg = \&Sys::LoadAvg::loadavg;
+  }
   foreach (@files) {
     my($sf,$ft) = read_stf($_);
     $hits += $1 if $ft =~ /hits:\s+(\d+)/;
@@ -924,6 +930,12 @@ sub rem_update {
 #    $users += $1 if $ft =~ /users:\s+(\d+)/;
     $txt .= $ft;
     foreach (keys %$sf) {
+      if ($loadavg) {			# quench CPU usage if it is high
+	my @la = &$loadavg;
+	if ($la[0] > 0.7) {
+	  sleep 1;
+	}
+      }
       if (exists $stats->{$_}) {
         $stats->{$_}->{B} += $sf->{$_}->{B};
         $stats->{$_}->{C} += $sf->{$_}->{C};
@@ -962,6 +974,29 @@ sub rem_update {
   rename $cache .'.tmp', $cache;
 }
 
+=item * $rv = chk_lock ($lockfile);
+
+  input:	lockfile name
+  return:	0	lock released
+		1	lock expired, 2 min
+
+=cut
+
+sub chk_lock {
+  my $lockf = shift;
+  return 0 unless -e $lockf;
+  local *F;
+  return 0 unless open F, $lockf;
+  (my $otherid = <F>) =~ s/\s+//;
+  close F;
+  my $wait = 120;		# wait a couple of minutes if necessary
+  while ($wait > 0 && kill 0, $otherid) {
+    sleep 1;
+    $wait--;
+  }
+  return $wait ? 0 : 1;
+}
+
 =item * rem_report($wconf);
 
 Similar to sub 'web_report' above but retrieves and assembles a composite report
@@ -997,6 +1032,8 @@ sub rem_report {
   while (1) {
     last if ($txt = rem_wchk($wconf));	# exit on bad config file
     my $cfile = $wconf->{cache} .'.'. $type;
+    my $lockf = $cfile .'.lock';
+    chk_lock($lockf);			# check if another process is doing the same thing
     if (chkcache($cfile,$wconf->{refresh})) {
 	eval {
 		local *CACHE;
@@ -1008,6 +1045,11 @@ sub rem_report {
         $txt = $@ if $@;
 	last;
     }
+    local *LOCK;
+    if ( open (LOCK,'>'. $lockf) ) {	# should never fail
+      print LOCK $$;
+      close LOCK;
+    }    
     unless (rem_dump($wconf)) {
       $txt = 'could not dump remotes';
       last;
@@ -1019,15 +1061,16 @@ sub rem_report {
     local *REPORT;
     if (open(REPORT,$cfile)) {
       foreach(<REPORT>) {
-        print $_;                                     # print to STDOUT
+        print $_;			# print to STDOUT
       }
       close REPORT;
     } else {
       $txt = "could not open '$cfile'";
     }
+    unlink $lockf;
     last;
   } # end while(1)
-  print $txt,"\n" if $txt;	# spit out any errors
+  print $txt,"\n" if $txt;		# spit out any errors
 }
 
 =pod
@@ -1053,11 +1096,12 @@ sub rem_report {
 	xhandle
 	rem_dump
 	rem_update
+	chk_lock
 	rem_report
 
 =head1 COPYRIGHT
 
-Copyright 2006, Michael Robinton <michael@bizsystems.com>
+Copyright 2006 - 2013, Michael Robinton <michael@bizsystems.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License (except as noted
