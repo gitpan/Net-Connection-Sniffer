@@ -1,5 +1,8 @@
 Revision history for Perl extension Net::Connection::Sniffer
 
+0.36  Mon Jan 27 11:59:58 PST 2014
+        modify Makefile.PL to bypass missing 'pod2text'
+
 0.35  Wed Jun  5 14:08:42 PDT 2013
 	in Report v0.13
 	add chk_lock to test for other processes running coalesce

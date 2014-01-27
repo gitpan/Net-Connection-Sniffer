@@ -440,7 +440,7 @@ BUGS
     My recommend fix for now when running with Perl versions older than 5.6
     is to restart the daemon daily to prevent excessive memory consumption.
 
-COPYRIGHT 2004 - 2011
+COPYRIGHT 2004 - 2014
     Michael Robinton <michael@bizsystems.com>
 
     All rights reserved.

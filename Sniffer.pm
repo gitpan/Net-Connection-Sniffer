@@ -8,7 +8,7 @@ use vars qw($VERSION @EXPORT @EXPORT_OK %EXPORT_TAGS @ISA);
 require DynaLoader;
 require Exporter;
 
-$VERSION = do { my @r = (q$Revision: 0.35 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.36 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 @ISA = qw(Exporter DynaLoader);
 
@@ -1320,7 +1320,7 @@ itself that was corrected with the updates to 5.6.
 My recommend fix for now when running with Perl versions older than 5.6 is
 to restart the daemon daily to prevent excessive memory consumption.
 
-=head1 COPYRIGHT 2004 - 2011
+=head1 COPYRIGHT 2004 - 2014
 
 Michael Robinton <michael@bizsystems.com>
 
